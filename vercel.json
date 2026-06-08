@@ -1,0 +1,29 @@
+{
+  "rewrites": [
+    {
+      "source": "/auth/google",
+      "destination": "/api/auth/google"
+    },
+    {
+      "source": "/auth/google/callback",
+      "destination": "/api/auth/google/callback"
+    },
+    {
+      "source": "/auth/logout",
+      "destination": "/api/auth/logout"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/robots"
+    }
+  ],
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 30
+    }
+  }
+}

@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Free AI Voice Detector | AI Voice Detector</title>
+    <meta
+      name="description"
+      content="Use a free AI voice detector to check short voice clips for AI-generated speech, voice cloning, and deepfake audio signals."
+    />
+    <link rel="canonical" href="https://voiceaichecker.com/free-ai-voice-detector/" />
+    <meta property="og:title" content="Free AI Voice Detector" />
+    <meta
+      property="og:description"
+      content="Check whether a short voice sample sounds AI-generated or human. Free daily use, optional Google login."
+    />
+    <meta property="og:url" content="https://voiceaichecker.com/free-ai-voice-detector/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://voiceaichecker.com/assets/voice-detection-hero.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Free AI Voice Detector" />
+    <meta
+      name="twitter:description"
+      content="A free AI voice checker for short clips, voice clones, synthetic narration, and suspicious messages."
+    />
+    <meta name="twitter:image" content="https://voiceaichecker.com/assets/voice-detection-hero.png" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebPage",
+            "name": "Free AI Voice Detector",
+            "url": "https://voiceaichecker.com/free-ai-voice-detector/",
+            "description": "A free online AI voice detector for checking short audio clips for synthetic voice signals."
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Is this AI voice detector free?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. The detector supports free daily checks. Google login is optional and can provide a higher free daily limit."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can an AI voice detector prove that audio is fake?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. The result is a probabilistic signal, not legal or forensic proof. Review the source, context, and other evidence before taking action."
+                }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar" aria-label="Account">
+        <a class="brand-link" href="/" aria-label="AI Voice Detector home">
+          <img class="brand-icon" src="/favicon.svg" alt="" />
+          <span>AI Voice Detector</span>
+        </a>
+        <div class="quota-chip" id="quota-chip">Free checks loading</div>
+        <nav class="main-nav" aria-label="Primary">
+          <a href="/">Home</a>
+          <a href="/free-ai-voice-detector/">Free Detector</a>
+          <a href="/ai-audio-detector/">AI Audio</a>
+          <a href="/deepfake-audio-detector/">Deepfake Audio</a>
+          <a href="/voice-clone-detector/">Voice Clone</a>
+          <a href="/ai-voice-checker/">Voice Checker</a>
+          <a href="/is-this-voice-ai/">Is This AI?</a>
+        </nav>
+        <div class="auth-area">
+          <a class="google-button" id="login-link" href="/auth/google">
+            <span class="google-mark" aria-hidden="true">G</span>
+            <span>Sign in with Google</span>
+          </a>
+          <div class="user-menu" id="user-menu" hidden>
+            <img id="user-picture" alt="" />
+            <span id="user-name">Account</span>
+            <button class="text-button" id="logout-button" type="button">Sign out</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="tool-grid" aria-labelledby="page-title">
+        <div class="intro">
+          <p class="eyebrow">Free AI voice check</p>
+          <h1 id="page-title">Free AI Voice Detector</h1>
+          <p class="summary">
+            Upload or record a short voice sample and check whether it sounds AI-generated, cloned, or human. This page is
+            built for people searching for an AI voice detector free to use before sharing or trusting a clip.
+          </p>
+          <div class="trust-row" aria-label="Service limits">
+            <span>Free daily use</span>
+            <span>30 sec max</span>
+            <span>Login optional</span>
+          </div>
+          <figure class="hero-visual">
+            <picture>
+              <source srcset="/assets/voice-detection-hero.webp" type="image/webp" />
+              <img
+                src="/assets/voice-detection-hero.png"
+                alt="Free AI voice detector interface with audio waveform and verification shield"
+                width="1659"
+                height="948"
+              />
+            </picture>
+          </figure>
+        </div>
+
+        <div class="detector-panel">
+          <div class="tabs" role="tablist" aria-label="Audio source">
+            <button class="tab is-active" id="upload-tab" type="button" role="tab" aria-selected="true">Upload</button>
+            <button class="tab" id="record-tab" type="button" role="tab" aria-selected="false">Record</button>
+          </div>
+
+          <div class="source-pane is-active" id="upload-pane" role="tabpanel" aria-labelledby="upload-tab">
+            <label class="drop-zone" id="drop-zone">
+              <input id="file-input" type="file" accept="audio/*,video/mp4,video/quicktime,video/webm" />
+              <span class="drop-icon" aria-hidden="true">+</span>
+              <span class="drop-title">Choose voice audio</span>
+              <span class="drop-meta">MP3, WAV, M4A, OGG, MP4, WEBM</span>
+            </label>
+          </div>
+
+          <div class="source-pane" id="record-pane" role="tabpanel" aria-labelledby="record-tab">
+            <div class="recorder">
+              <button class="record-button" id="record-button" type="button" aria-pressed="false">
+                <span class="record-dot" aria-hidden="true"></span>
+                <span id="record-label">Record</span>
+              </button>
+              <span class="record-time" id="record-time">00:00</span>
+            </div>
+          </div>
+
+          <div class="file-row" id="file-row" hidden>
+            <div>
+              <strong id="file-name">No file selected</strong>
+              <span id="file-meta">-</span>
+            </div>
+            <button class="icon-button" id="clear-button" type="button" aria-label="Clear selected audio">x</button>
+          </div>
+
+          <canvas class="waveform" id="waveform" width="840" height="180" aria-label="Audio waveform"></canvas>
+
+          <div class="control-row">
+            <label for="seconds-input">Analyze up to</label>
+            <div class="seconds-control">
+              <input id="seconds-input" type="range" min="5" max="30" step="5" value="30" />
+              <output id="seconds-output" for="seconds-input">30s</output>
+            </div>
+          </div>
+
+          <button class="primary-button" id="detect-button" type="button" disabled>Detect voice for free</button>
+          <p class="status" id="status" role="status"></p>
+        </div>
+      </section>
+
+      <section class="result-grid" id="result-section" aria-live="polite" hidden>
+        <div class="result-panel">
+          <div class="result-heading">
+            <span class="result-kicker">Result</span>
+            <h2 id="result-label">Unclear</h2>
+          </div>
+          <div class="score-meter" aria-label="AI probability">
+            <div class="score-fill" id="score-fill"></div>
+          </div>
+          <div class="score-row">
+            <span>Human <strong id="human-score">--</strong></span>
+            <span>AI <strong id="ai-score">--</strong></span>
+          </div>
+        </div>
+
+        <div class="detail-panel">
+          <dl>
+            <div>
+              <dt>Confidence</dt>
+              <dd id="confidence-value">--</dd>
+            </div>
+            <div>
+              <dt>Provider</dt>
+              <dd id="provider-value">--</dd>
+            </div>
+            <div>
+              <dt>Analyzed</dt>
+              <dd id="analyzed-value">--</dd>
+            </div>
+            <div>
+              <dt>Daily remaining</dt>
+              <dd id="remaining-value">--</dd>
+            </div>
+          </dl>
+          <p id="result-note" class="note"></p>
+        </div>
+      </section>
+
+      <section class="content-section" aria-labelledby="free-meaning">
+        <p class="answer">
+          A free AI voice detector is useful when you need a quick first signal, not a long forensic report. Use it to
+          screen voice notes, social clips, synthetic narration, and suspicious messages before you trust the audio or
+          share it with other people.
+        </p>
+        <h2 id="free-meaning">What Free AI Voice Detection Means</h2>
+        <div class="content-grid">
+          <article class="info-card">
+            <h3>Free daily checks</h3>
+            <p>
+              You can run a limited number of free checks without creating an account. Signing in with Google is optional
+              and is used only to apply a higher daily free limit.
+            </p>
+          </article>
+          <article class="info-card">
+            <h3>Short samples only</h3>
+            <p>
+              The detector is designed for short speech segments. A clear 10-30 second voice sample is usually more
+              useful than a full podcast, song, livestream, or noisy recording.
+            </p>
+          </article>
+          <article class="info-card">
+            <h3>Probability, not proof</h3>
+            <p>
+              The result is a signal. Treat likely AI, likely human, and unclear labels as starting points for review,
+              especially when money, identity, safety, or reputation is involved.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="content-section" aria-labelledby="how-to-use-free">
+        <h2 id="how-to-use-free">How to Use the Free AI Voice Checker</h2>
+        <div class="content-grid">
+          <article class="info-card">
+            <h3>Pick one speaker</h3>
+            <p>Use a section where one person is speaking clearly. Avoid overlapping voices, music beds, and heavy noise.</p>
+          </article>
+          <article class="info-card">
+            <h3>Check the source</h3>
+            <p>
+              Keep the original link, sender, timestamp, and context. A detector score is stronger when you can compare it
+              with source evidence.
+            </p>
+          </article>
+          <article class="info-card">
+            <h3>Retest unclear clips</h3>
+            <p>
+              If a result is unclear, try another clean section from the same speaker. Low-quality compression and short
+              clips often reduce confidence.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="content-section" aria-labelledby="related-free">
+        <h2 id="related-free">Related Voice Detection Pages</h2>
+        <div class="related-grid">
+          <a class="related-card" href="/">
+            <strong>AI Voice Detector</strong>
+            <span>Use the main detector page for general AI voice checks.</span>
+          </a>
+          <a class="related-card" href="/ai-voice-checker/">
+            <strong>AI Voice Checker</strong>
+            <span>Run a faster checker-style workflow for short clips.</span>
+          </a>
+          <a class="related-card" href="/deepfake-audio-detector/">
+            <strong>Deepfake Audio Detector</strong>
+            <span>Review suspicious impersonation and fraud-risk audio.</span>
+          </a>
+          <a class="related-card" href="/voice-clone-detector/">
+            <strong>Voice Clone Detector</strong>
+            <span>Focus on clips that may imitate a real person.</span>
+          </a>
+          <a class="related-card" href="/is-this-voice-ai/">
+            <strong>Is This Voice AI?</strong>
+            <span>Use a question-led page when you are unsure what to check.</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="content-section" aria-labelledby="free-faq">
+        <h2 id="free-faq">Free AI Voice Detector FAQ</h2>
+        <div class="faq-grid">
+          <article class="faq-item">
+            <h3>Is this AI voice detector free?</h3>
+            <p>Yes. You can use the detector for free daily checks. Login is optional and only changes the daily limit.</p>
+          </article>
+          <article class="faq-item">
+            <h3>Can I use the AI voice detector free without an account?</h3>
+            <p>Yes. Anonymous users can run free checks. Google sign-in is available for a higher free daily quota.</p>
+          </article>
+          <article class="faq-item">
+            <h3>What can a free AI voice checker detect?</h3>
+            <p>
+              It can flag signals that resemble AI-generated speech, voice cloning, or deepfake audio. It cannot prove
+              who made the audio or why it was created.
+            </p>
+          </article>
+          <article class="faq-item">
+            <h3>How accurate is a free AI voice detector?</h3>
+            <p>
+              Accuracy depends on the sample, noise, compression, speaker, and detector model. Use clean speech and treat
+              the result as a screening signal.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <footer class="site-footer"><div class="footer-links"><a href="/free-ai-voice-detector/">Free AI Voice Detector</a><a href="/">AI Voice Detector</a><a href="/ai-voice-checker/">AI Voice Checker</a><a href="/ai-audio-detector/">AI Audio Detector</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></div><div class="share-links" aria-label="Share this page">
+          <span class="share-label">Share</span>
+          <a class="share-link" data-share="x" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer nofollow" aria-label="Share on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.9 2h3.3l-7.2 8.2L23.5 22h-6.7l-5.2-6.8L5.6 22H2.3l7.7-8.8L1.5 2h6.8l4.7 6.2L18.9 2Zm-1.2 17.9h1.8L7.3 4H5.4l12.3 15.9Z"/></svg><span>X</span></a>
+          <a class="share-link" data-share="facebook" href="https://www.facebook.com/sharer/sharer.php" target="_blank" rel="noopener noreferrer nofollow" aria-label="Share on Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8.5V6.8c0-.8.2-1.2 1.3-1.2H17V2.2C16.2 2.1 15.4 2 14.6 2 11.9 2 10 3.7 10 6.5v2H7v3.7h3V22h4v-9.8h3.1l.5-3.7H14Z"/></svg><span>Facebook</span></a>
+          <a class="share-link" data-share="reddit" href="https://www.reddit.com/submit" target="_blank" rel="noopener noreferrer nofollow" aria-label="Share on Reddit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12.1c0-1.4-1.1-2.5-2.5-2.5-.7 0-1.3.3-1.8.7-1.4-.9-3.2-1.4-5.1-1.5l.9-4.1 3 .6c.1 1 1 1.8 2 1.8 1.1 0 2-.9 2-2s-.9-2-2-2c-.8 0-1.5.5-1.8 1.2l-3.8-.8c-.3-.1-.6.1-.7.5l-1 4.8c-2 .1-3.8.6-5.2 1.5-.5-.4-1.1-.7-1.8-.7C2.9 9.6 2 10.7 2 12.1c0 .9.5 1.7 1.2 2.2v.7c0 3.4 4 6.1 8.8 6.1s8.8-2.7 8.8-6.1v-.7c.7-.5 1.2-1.3 1.2-2.2ZM7.8 14c0-.8.6-1.4 1.4-1.4s1.4.6 1.4 1.4-.6 1.4-1.4 1.4S7.8 14.8 7.8 14Zm7.7 3.5c-.9.9-2.3 1.3-3.5 1.3s-2.6-.4-3.5-1.3c-.2-.2-.2-.5 0-.7.2-.2.5-.2.7 0 .7.6 1.7.9 2.8.9s2.1-.3 2.8-.9c.2-.2.5-.2.7 0 .2.2.2.5 0 .7Zm-.6-2.1c-.8 0-1.4-.6-1.4-1.4s.6-1.4 1.4-1.4 1.4.6 1.4 1.4-.6 1.4-1.4 1.4Z"/></svg><span>Reddit</span></a>
+          <a class="share-link" data-share="linkedin" href="https://www.linkedin.com/sharing/share-offsite/" target="_blank" rel="noopener noreferrer nofollow" aria-label="Share on LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.3 2.3 0 1 1 0 4.6 2.3 2.3 0 0 1 0-4.6ZM3 9h4v12H3V9Zm6.3 0h3.8v1.7h.1c.5-1 1.8-2.1 3.8-2.1 4 0 4.8 2.6 4.8 6V21h-4v-5.7c0-1.4 0-3.1-1.9-3.1s-2.2 1.5-2.2 3V21h-4V9Z"/></svg><span>LinkedIn</span></a>
+        </div></footer>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
