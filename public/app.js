@@ -310,7 +310,7 @@ const showResult = (result) => {
   remainingValue.textContent = String(result.remainingDailyDetections ?? "--");
   resultNote.textContent = result.notes || "";
   resultSection.hidden = false;
-  resultSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
 const detectSelectedFile = async () => {
