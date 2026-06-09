@@ -160,7 +160,7 @@
             <span class="result-kicker">Result</span>
             <h2 id="result-label">Unclear</h2>
           </div>
-          <div class="score-meter" aria-label="AI probability">
+          <div class="score-meter" aria-hidden="true">
             <div class="score-fill" id="score-fill"></div>
           </div>
           <div class="score-row">
@@ -193,12 +193,14 @@
 
         <figure class="result-visual">
           <picture>
-            <source srcset="/assets/voice-detection-hero.webp" type="image/webp" />
+            <source srcset="/assets/voice-detection-result.webp" type="image/webp" />
             <img
               src="/assets/voice-detection-hero.png"
               alt="Free AI voice detector interface with audio waveform and verification shield"
-              width="1659"
-              height="948"
+              width="960"
+              height="549"
+              loading="lazy"
+              decoding="async"
             />
           </picture>
         </figure>
@@ -324,14 +326,6 @@
     </main>
 
     <script src="/app.js" type="module"></script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZSMHP9G89F"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-ZSMHP9G89F');
-</script>
+    <script src="/analytics.js" defer></script>
 </body>
 </html>

@@ -55,7 +55,7 @@
       </section>
 
       <section class="result-grid" id="result-section" aria-live="polite" hidden>
-        <div class="result-panel"><div class="result-heading"><span class="result-kicker">Result</span><h2 id="result-label">Unclear</h2></div><div class="score-meter" aria-label="AI probability"><div class="score-fill" id="score-fill"></div></div><div class="score-row"><span>Human <strong id="human-score">--</strong></span><span>AI <strong id="ai-score">--</strong></span></div></div>
+        <div class="result-panel"><div class="result-heading"><span class="result-kicker">Result</span><h2 id="result-label">Unclear</h2></div><div class="score-meter" aria-hidden="true"><div class="score-fill" id="score-fill"></div></div><div class="score-row"><span>Human <strong id="human-score">--</strong></span><span>AI <strong id="ai-score">--</strong></span></div></div>
         <div class="detail-panel"><dl><div><dt>Confidence</dt><dd id="confidence-value">--</dd></div><div><dt>Provider</dt><dd id="provider-value">--</dd></div><div><dt>Analyzed</dt><dd id="analyzed-value">--</dd></div><div><dt>Daily remaining</dt><dd id="remaining-value">--</dd></div></dl><p id="result-note" class="note"></p></div>
       </section>
 
@@ -97,14 +97,6 @@
         </div></footer>
     </main>
     <script src="/app.js" type="module"></script>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZSMHP9G89F"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-ZSMHP9G89F');
-</script>
+    <script src="/analytics.js" defer></script>
 </body>
 </html>

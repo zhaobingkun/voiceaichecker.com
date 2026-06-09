@@ -33,6 +33,18 @@ const mimeTypes = {
   ".ico": "image/x-icon"
 };
 
+const getCacheControl = (extension) => {
+  if (extension === ".html") {
+    return "no-store";
+  }
+
+  if ([".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico"].includes(extension)) {
+    return "public, max-age=31536000, immutable";
+  }
+
+  return "public, max-age=3600, must-revalidate";
+};
+
 const serveStatic = async (req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = decodeURIComponent(requestUrl.pathname);
@@ -57,7 +69,7 @@ const serveStatic = async (req, res) => {
   const extension = path.extname(filePath).toLowerCase();
   res.writeHead(200, {
     "Content-Type": mimeTypes[extension] || "application/octet-stream",
-    "Cache-Control": extension === ".html" ? "no-store" : "public, max-age=3600"
+    "Cache-Control": getCacheControl(extension)
   });
   createReadStream(filePath).pipe(res);
 };
