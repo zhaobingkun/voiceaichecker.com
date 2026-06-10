@@ -191,6 +191,7 @@ const publicPages = [
   "/deepfake-audio-detector/",
   "/voice-clone-detector/",
   "/ai-voice-checker/",
+  "/voice-ai-checker/",
   "/is-this-voice-ai/",
   "/privacy/",
   "/terms/"
