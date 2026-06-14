@@ -75,7 +75,7 @@ const renderAccount = (state) => {
   accountState = state;
   const remaining = state?.remainingDailyDetections ?? "--";
   const limit = state?.dailyLimit ?? "--";
-  quotaChip.textContent = `${remaining}/${limit} free checks left`;
+  quotaChip.textContent = state?.isPro ? `${remaining}/${limit} Pro checks left` : `${remaining}/${limit} free checks left`;
 
   if (!state?.authConfigured) {
     loginLink.classList.add("is-disabled");

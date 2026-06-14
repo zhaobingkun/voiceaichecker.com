@@ -8,6 +8,8 @@ import {
   handleDetect,
   handleGoogleLogin,
   handleGoogleLoginCallback,
+  handleCheckout,
+  handleCreemWebhook,
   handleHealth,
   handleLogout,
   handleMe,
@@ -94,12 +96,22 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && requestUrl.pathname === "/api/me") {
-      handleMe(req, res);
+      await handleMe(req, res);
       return;
     }
 
     if (req.method === "GET" && req.url === "/api/health") {
       handleHealth(res);
+      return;
+    }
+
+    if (req.method === "POST" && requestUrl.pathname === "/api/checkout") {
+      await handleCheckout(req, res);
+      return;
+    }
+
+    if (req.method === "POST" && (requestUrl.pathname === "/api/creem/webhook" || requestUrl.pathname === "/webhook")) {
+      await handleCreemWebhook(req, res);
       return;
     }
 

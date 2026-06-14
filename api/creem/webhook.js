@@ -1,12 +1,18 @@
-import { handleMe, sendJson } from "../src/server/handlers.js";
+import { handleCreemWebhook, sendJson } from "../../src/server/handlers.js";
+
+export const config = {
+  api: {
+    bodyParser: false
+  }
+};
 
 export default async function handler(req, res) {
   try {
-    if (req.method !== "GET") {
+    if (req.method !== "POST") {
       sendJson(res, 405, { error: "Method not allowed" });
       return;
     }
-    await handleMe(req, res);
+    await handleCreemWebhook(req, res);
   } catch (error) {
     sendJson(res, 400, { error: error.message || "Request failed" });
   }

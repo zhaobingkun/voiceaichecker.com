@@ -26,6 +26,11 @@ MODULATE_API_URL=https://modulate-developer-apis.com/api/velma-2-synthetic-voice
 SESSION_SECRET=generate_a_long_random_secret
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+PRO_DAILY_LIMIT=20
+CREEM_API_KEY=your_creem_api_key
+CREEM_API_BASE_URL=https://api.creem.io
+CREEM_WEBHOOK_SECRET=your_creem_webhook_secret
+CREEM_PRO_PRODUCT_ID=prod_12r7OKEp2EKXmH8Hsyz5oN
 ```
 
 Do not put `MODULATE_API_KEY` in `public/app.js` or any frontend file.
@@ -33,11 +38,11 @@ Do not put `SUPABASE_SERVICE_ROLE_KEY` in frontend files either.
 
 ## Supabase users table
 
-Run `supabase-schema.sql` in the Supabase SQL Editor before testing Google login persistence. Google login works without Supabase, but users will only appear in Supabase after the table exists.
+Run `supabase-schema.sql` in the Supabase SQL Editor before testing Google login persistence or Pro subscription access. Google login works without Supabase, but users and subscription status will only persist after the tables exist.
 
 ## Optional Google login
 
-Users can still detect audio without logging in. Google login only adds account identity and a higher daily quota.
+Users can still detect audio without logging in. Google login only adds account identity and a higher free daily quota.
 
 Create an OAuth 2.0 Web Client in Google Cloud Console, then add this authorized redirect URI:
 
@@ -53,6 +58,7 @@ GOOGLE_CLIENT_ID=your_google_oauth_client_id
 GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
 SESSION_SECRET=generate_a_long_random_secret
 AUTH_DAILY_LIMIT=10
+PRO_DAILY_LIMIT=20
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
@@ -71,6 +77,7 @@ Defaults are in `.env.example`:
 - `MAX_ANALYZE_SECONDS=30`
 - `DAILY_IP_LIMIT=3`
 - `AUTH_DAILY_LIMIT=10`
+- `PRO_DAILY_LIMIT=20`
 
 The backend also keeps an in-memory hash cache, so repeated uploads of the same file and analyze window do not call the provider again.
 
@@ -97,6 +104,11 @@ DAILY_IP_LIMIT=3
 AUTH_DAILY_LIMIT=10
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+PRO_DAILY_LIMIT=20
+CREEM_API_KEY=your_creem_api_key
+CREEM_API_BASE_URL=https://api.creem.io
+CREEM_WEBHOOK_SECRET=your_creem_webhook_secret
+CREEM_PRO_PRODUCT_ID=prod_12r7OKEp2EKXmH8Hsyz5oN
 ```
 
 In Google Cloud, add the production redirect URI:
@@ -111,11 +123,17 @@ For local development, keep:
 http://localhost:8787/auth/google/callback
 ```
 
+In Creem, set the production webhook URL to:
+
+```text
+https://voiceaichecker.com/webhook
+```
+
 ## Files
 
 - `server.js`: static file server and `/api/detect`
 - `src/auth.js`: Google OAuth login and in-memory sessions
-- `src/supabase.js`: Supabase REST user upsert
+- `src/supabase.js`: Supabase REST user and subscription upserts
 - `src/audio.js`: WAV validation and server-side trimming
 - `src/provider.js`: mock detector and provider adapter
 - `src/config.js`: limits and environment configuration

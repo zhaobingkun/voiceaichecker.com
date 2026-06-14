@@ -71,10 +71,15 @@ export const config = {
   sessionSecret: process.env.SESSION_SECRET || "",
   supabaseUrl: normalizeSupabaseUrl(process.env.SUPABASE_URL),
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+  creemApiKey: process.env.CREEM_API_KEY || "",
+  creemApiBaseUrl: (process.env.CREEM_API_BASE_URL || "https://api.creem.io").replace(/\/+$/, ""),
+  creemWebhookSecret: process.env.CREEM_WEBHOOK_SECRET || "",
+  creemProProductId: process.env.CREEM_PRO_PRODUCT_ID || "prod_12r7OKEp2EKXmH8Hsyz5oN",
   maxFileMb: toNumber(process.env.MAX_FILE_MB, 10),
   maxAnalyzeSeconds: Math.trunc(toNumber(process.env.MAX_ANALYZE_SECONDS, 30)),
   dailyIpLimit: Math.trunc(toNumber(process.env.DAILY_IP_LIMIT, 3)),
-  authenticatedDailyLimit: Math.trunc(toNumber(process.env.AUTH_DAILY_LIMIT, 10))
+  authenticatedDailyLimit: Math.trunc(toNumber(process.env.AUTH_DAILY_LIMIT, 10)),
+  proDailyLimit: Math.trunc(toNumber(process.env.PRO_DAILY_LIMIT, 20))
 };
 
 export const limits = {

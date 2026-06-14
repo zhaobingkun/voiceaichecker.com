@@ -9,8 +9,9 @@ import {
 } from "../auth.js";
 import { trimWavBuffer } from "../audio.js";
 import { config, limits } from "../config.js";
+import { createProCheckout, isCreemConfigured, verifyCreemWebhookSignature } from "../creem.js";
 import { classifyScore, confidenceForScore, detectVoice } from "../provider.js";
-import { isSupabaseConfigured } from "../supabase.js";
+import { getUserSubscription, isSupabaseConfigured, upsertSubscription } from "../supabase.js";
 
 const cache = globalThis.__avdCache || new Map();
 const usage = globalThis.__avdUsage || new Map();
@@ -60,14 +61,22 @@ export const readJsonBody = async (req) => {
   return JSON.parse(body);
 };
 
-const usageKeyForRequest = (req) => {
+const usageKeyForRequest = async (req) => {
   const user = getCurrentUser(req);
   if (user) {
-    return { user, key: `${todayKey()}:user:${user.id}`, limit: config.authenticatedDailyLimit };
+    const subscription = await getUserSubscription(user);
+    const isPro = Boolean(subscription?.isPro);
+    return {
+      user,
+      subscription,
+      isPro,
+      key: `${todayKey()}:user:${user.id}:${isPro ? "pro" : "free"}`,
+      limit: isPro ? config.proDailyLimit : config.authenticatedDailyLimit
+    };
   }
 
   const ip = getIp(req);
-  return { user: null, key: `${todayKey()}:ip:${ip}`, limit: config.dailyIpLimit };
+  return { user: null, subscription: null, isPro: false, key: `${todayKey()}:ip:${ip}`, limit: config.dailyIpLimit };
 };
 
 const remainingForKey = (key, limit) => Math.max(0, limit - (usage.get(key) || 0));
@@ -80,11 +89,11 @@ const useQuota = (key, limit) => {
 };
 
 export const handleDetect = async (req, res) => {
-  const quota = usageKeyForRequest(req);
+  const quota = await usageKeyForRequest(req);
   if (!useQuota(quota.key, quota.limit)) {
     sendJson(res, 429, {
       error: quota.user
-        ? "Daily signed-in limit reached. Try again tomorrow."
+        ? "Daily account limit reached. Try again tomorrow."
         : "Daily free limit reached. Sign in with Google for more free detections."
     });
     return;
@@ -122,6 +131,8 @@ export const handleDetect = async (req, res) => {
       ...cached,
       cached: true,
       user: quota.user,
+      subscription: quota.subscription,
+      isPro: quota.isPro,
       remainingDailyDetections: remainingForKey(quota.key, quota.limit)
     });
     return;
@@ -157,15 +168,164 @@ export const handleDetect = async (req, res) => {
   sendJson(res, 200, {
     ...result,
     user: quota.user,
+    subscription: quota.subscription,
+    isPro: quota.isPro,
     remainingDailyDetections: remainingForKey(quota.key, quota.limit)
   });
 };
 
-export const handleMe = (req, res) => {
-  const quota = usageKeyForRequest(req);
+
+const readRawBody = async (req) => {
+  if (Buffer.isBuffer(req.body)) return req.body;
+  if (typeof req.body === "string") return Buffer.from(req.body, "utf8");
+  if (req.body && typeof req.body === "object") return Buffer.from(JSON.stringify(req.body), "utf8");
+
+  const chunks = [];
+  for await (const chunk of req) chunks.push(chunk);
+  return Buffer.concat(chunks);
+};
+
+const firstValue = (...values) => {
+  for (const value of values) {
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+  return "";
+};
+
+const objectId = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "object") return value.id || value.subscription_id || value.customer_id || "";
+  return "";
+};
+
+const findMetadata = (event) => {
+  const queue = [event?.data, event?.object, event];
+  const seen = new Set();
+
+  while (queue.length) {
+    const item = queue.shift();
+    if (!item || typeof item !== "object" || seen.has(item)) continue;
+    seen.add(item);
+
+    if (item.metadata && typeof item.metadata === "object") return item.metadata;
+
+    for (const value of Object.values(item)) {
+      if (value && typeof value === "object") queue.push(value);
+    }
+  }
+
+  return {};
+};
+
+const normalizeCreemStatus = ({ type, status }) => {
+  const rawStatus = String(status || "").toLowerCase();
+  const rawType = String(type || "").toLowerCase();
+  const text = `${rawType} ${rawStatus}`;
+
+  if (/(refund|refunded)/.test(text)) return "refunded";
+  if (/(cancel|canceled|cancelled)/.test(text)) return "canceled";
+  if (/(expire|expired)/.test(text)) return "expired";
+  if (/(fail|failed|past_due|unpaid)/.test(text)) return rawStatus || "failed";
+  if (/(trial)/.test(text)) return "trialing";
+  if (/(active|paid|completed|checkout\.completed|payment\.succeeded|subscription\.created)/.test(text)) {
+    return "active";
+  }
+
+  return rawStatus || "active";
+};
+
+const normalizeTimestamp = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "number") return new Date(value > 100000000000 ? value : value * 1000).toISOString();
+  if (/^\d+$/.test(String(value))) {
+    const number = Number(value);
+    return new Date(number > 100000000000 ? number : number * 1000).toISOString();
+  }
+  return String(value);
+};
+
+const normalizeBoolean = (value) => {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return ["true", "1", "yes"].includes(value.toLowerCase());
+  return Boolean(value);
+};
+
+const subscriptionUpdateFromCreemEvent = (event) => {
+  const data = event?.data || event?.object || event || {};
+  const subscription = data.subscription || data.subscription_details || data.recurring || {};
+  const customer = data.customer || data.customer_details || {};
+  const metadata = findMetadata(event);
+  const eventType = String(event?.type || event?.event_type || event?.event || "");
+  const status = normalizeCreemStatus({
+    type: eventType,
+    status: firstValue(data.status, subscription.status, data.payment_status, data.subscription_status)
+  });
+
+  return {
+    googleId: firstValue(metadata.google_user_id, metadata.googleUserId, metadata.user_id, metadata.userId),
+    email: firstValue(metadata.email, data.customer_email, data.email, customer.email),
+    plan: firstValue(metadata.plan, "pro_monthly"),
+    status,
+    creemCustomerId: objectId(firstValue(data.customer_id, data.customer, customer)),
+    creemSubscriptionId: objectId(firstValue(data.subscription_id, data.subscription, subscription)),
+    creemCheckoutId: objectId(firstValue(data.checkout_id, data.checkout)),
+    creemOrderId: objectId(firstValue(data.order_id, data.order, data.id)),
+    creemProductId: objectId(firstValue(data.product_id, data.product, subscription.product_id, subscription.product)),
+    currentPeriodEnd: normalizeTimestamp(
+      firstValue(subscription.current_period_end, data.current_period_end, subscription.currentPeriodEnd, data.currentPeriodEnd)
+    ),
+    cancelAtPeriodEnd: normalizeBoolean(firstValue(subscription.cancel_at_period_end, data.cancel_at_period_end, false)),
+    rawEventType: eventType
+  };
+};
+
+export const handleCheckout = async (req, res) => {
+  const user = getCurrentUser(req);
+  if (!user) {
+    redirect(res, "/auth/google?next=/pricing/");
+    return;
+  }
+
+  const checkout = await createProCheckout({ user });
+  redirect(res, checkout.checkoutUrl);
+};
+
+export const handleCreemWebhook = async (req, res) => {
+  const rawBody = await readRawBody(req);
+  if (!verifyCreemWebhookSignature({ headers: req.headers || {}, rawBody })) {
+    sendJson(res, 401, { error: "Invalid webhook signature" });
+    return;
+  }
+
+  let event = {};
+  try {
+    event = JSON.parse(rawBody.toString("utf8"));
+  } catch {
+    sendJson(res, 400, { error: "Invalid webhook JSON" });
+    return;
+  }
+
+  const subscriptionUpdate = subscriptionUpdateFromCreemEvent(event);
+  const upsertResult = await upsertSubscription(subscriptionUpdate);
+
+  console.log("Creem webhook received", {
+    type: event.type || event.event_type || event.event || "unknown",
+    id: event.id || event.object?.id || event.data?.id || "unknown",
+    subscriptionUpdated: Boolean(upsertResult.ok)
+  });
+
+  sendJson(res, 200, { ok: true });
+};
+
+export const handleMe = async (req, res) => {
+  const quota = await usageKeyForRequest(req);
   sendJson(res, 200, {
     authConfigured: isGoogleAuthConfigured(),
     user: quota.user,
+    subscription: quota.subscription,
+    isPro: quota.isPro,
     dailyLimit: quota.limit,
     remainingDailyDetections: remainingForKey(quota.key, quota.limit)
   });
@@ -177,10 +337,12 @@ export const handleHealth = (res) => {
     providerConfigured: Boolean(config.modulateApiKey && config.modulateApiUrl),
     authConfigured: isGoogleAuthConfigured(),
     supabaseConfigured: isSupabaseConfigured(),
+    creemConfigured: isCreemConfigured(),
     maxFileMb: config.maxFileMb,
     maxAnalyzeSeconds: config.maxAnalyzeSeconds,
     dailyIpLimit: config.dailyIpLimit,
-    authenticatedDailyLimit: config.authenticatedDailyLimit
+    authenticatedDailyLimit: config.authenticatedDailyLimit,
+    proDailyLimit: config.proDailyLimit
   });
 };
 
@@ -193,6 +355,8 @@ const publicPages = [
   "/ai-voice-checker/",
   "/voice-ai-checker/",
   "/is-this-voice-ai/",
+  "/pricing/",
+  "/refund-policy/",
   "/privacy/",
   "/terms/"
 ];

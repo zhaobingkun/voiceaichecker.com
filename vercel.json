@@ -66,6 +66,10 @@
     {
       "source": "/robots.txt",
       "destination": "/api/robots"
+    },
+    {
+      "source": "/webhook",
+      "destination": "/api/creem/webhook"
     }
   ],
   "functions": {
@@ -178,6 +182,26 @@
     {
       "source": "/terms/index.html",
       "destination": "/terms/",
+      "permanent": true
+    },
+    {
+      "source": "/pricing",
+      "destination": "/pricing/",
+      "permanent": true
+    },
+    {
+      "source": "/pricing/index.html",
+      "destination": "/pricing/",
+      "permanent": true
+    },
+    {
+      "source": "/refund-policy",
+      "destination": "/refund-policy/",
+      "permanent": true
+    },
+    {
+      "source": "/refund-policy/index.html",
+      "destination": "/refund-policy/",
       "permanent": true
     }
   ]

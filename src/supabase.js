@@ -78,3 +78,99 @@ export const upsertUser = async (user) => {
 
   return { ok: true };
 };
+
+const activeSubscriptionStatuses = new Set(["active", "trialing"]);
+
+export const getUserSubscription = async (user) => {
+  if (!isSupabaseConfigured() || !user?.id) return null;
+
+  const params = new URLSearchParams({
+    select: "google_id,email,plan,status,creem_subscription_id,current_period_end,cancel_at_period_end,updated_at",
+    google_id: `eq.${user.id}`,
+    order: "updated_at.desc",
+    limit: "1"
+  });
+
+  const response = await requestJson({
+    method: "GET",
+    url: `${config.supabaseUrl}/rest/v1/subscriptions?${params}`,
+    headers: {
+      apikey: config.supabaseServiceRoleKey,
+      Authorization: `Bearer ${config.supabaseServiceRoleKey}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      response.payload?.message ||
+        response.payload?.error ||
+        `Supabase subscription lookup failed with HTTP ${response.status}`
+    );
+  }
+
+  const subscription = Array.isArray(response.payload) ? response.payload[0] : null;
+  if (!subscription) return null;
+
+  return {
+    ...subscription,
+    isPro: subscription.plan === "pro_monthly" && activeSubscriptionStatuses.has(subscription.status)
+  };
+};
+
+export const upsertSubscription = async ({
+  googleId,
+  email,
+  plan = "pro_monthly",
+  status,
+  creemCustomerId = "",
+  creemSubscriptionId = "",
+  creemCheckoutId = "",
+  creemOrderId = "",
+  creemProductId = "",
+  currentPeriodEnd = null,
+  cancelAtPeriodEnd = false,
+  rawEventType = ""
+}) => {
+  if (!isSupabaseConfigured()) return { ok: false, skipped: true };
+  if (!googleId && !email) return { ok: false, skipped: true, reason: "missing_user_identity" };
+  if (!status) return { ok: false, skipped: true, reason: "missing_status" };
+
+  const body = JSON.stringify({
+    google_id: googleId || null,
+    email: email || null,
+    plan,
+    status,
+    creem_customer_id: creemCustomerId || null,
+    creem_subscription_id: creemSubscriptionId || null,
+    creem_checkout_id: creemCheckoutId || null,
+    creem_order_id: creemOrderId || null,
+    creem_product_id: creemProductId || null,
+    current_period_end: currentPeriodEnd || null,
+    cancel_at_period_end: Boolean(cancelAtPeriodEnd),
+    raw_event_type: rawEventType || null,
+    last_event_at: new Date().toISOString()
+  });
+
+  const response = await requestJson({
+    method: "POST",
+    url: `${config.supabaseUrl}/rest/v1/subscriptions?on_conflict=google_id`,
+    headers: {
+      apikey: config.supabaseServiceRoleKey,
+      Authorization: `Bearer ${config.supabaseServiceRoleKey}`,
+      "Content-Type": "application/json",
+      "Content-Length": String(Buffer.byteLength(body)),
+      Prefer: "resolution=merge-duplicates,return=minimal"
+    },
+    body
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      response.payload?.message ||
+        response.payload?.error ||
+        `Supabase subscription upsert failed with HTTP ${response.status}`
+    );
+  }
+
+  return { ok: true };
+};
