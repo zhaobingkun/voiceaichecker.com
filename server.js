@@ -103,12 +103,12 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (req.method === "GET" && requestUrl.pathname === "/sitemap.xml") {
+    if ((req.method === "GET" || req.method === "HEAD") && requestUrl.pathname === "/sitemap.xml") {
       handleSitemap(req, res);
       return;
     }
 
-    if (req.method === "GET" && requestUrl.pathname === "/robots.txt") {
+    if ((req.method === "GET" || req.method === "HEAD") && requestUrl.pathname === "/robots.txt") {
       handleRobots(req, res);
       return;
     }

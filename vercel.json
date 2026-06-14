@@ -72,5 +72,113 @@
     "api/**/*.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.voiceaichecker.com"
+        }
+      ],
+      "destination": "https://voiceaichecker.com/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/free-ai-voice-detector",
+      "destination": "/free-ai-voice-detector/",
+      "permanent": true
+    },
+    {
+      "source": "/free-ai-voice-detector/index.html",
+      "destination": "/free-ai-voice-detector/",
+      "permanent": true
+    },
+    {
+      "source": "/ai-audio-detector",
+      "destination": "/ai-audio-detector/",
+      "permanent": true
+    },
+    {
+      "source": "/ai-audio-detector/index.html",
+      "destination": "/ai-audio-detector/",
+      "permanent": true
+    },
+    {
+      "source": "/deepfake-audio-detector",
+      "destination": "/deepfake-audio-detector/",
+      "permanent": true
+    },
+    {
+      "source": "/deepfake-audio-detector/index.html",
+      "destination": "/deepfake-audio-detector/",
+      "permanent": true
+    },
+    {
+      "source": "/voice-clone-detector",
+      "destination": "/voice-clone-detector/",
+      "permanent": true
+    },
+    {
+      "source": "/voice-clone-detector/index.html",
+      "destination": "/voice-clone-detector/",
+      "permanent": true
+    },
+    {
+      "source": "/ai-voice-checker",
+      "destination": "/ai-voice-checker/",
+      "permanent": true
+    },
+    {
+      "source": "/ai-voice-checker/index.html",
+      "destination": "/ai-voice-checker/",
+      "permanent": true
+    },
+    {
+      "source": "/voice-ai-checker",
+      "destination": "/voice-ai-checker/",
+      "permanent": true
+    },
+    {
+      "source": "/voice-ai-checker/index.html",
+      "destination": "/voice-ai-checker/",
+      "permanent": true
+    },
+    {
+      "source": "/is-this-voice-ai",
+      "destination": "/is-this-voice-ai/",
+      "permanent": true
+    },
+    {
+      "source": "/is-this-voice-ai/index.html",
+      "destination": "/is-this-voice-ai/",
+      "permanent": true
+    },
+    {
+      "source": "/privacy",
+      "destination": "/privacy/",
+      "permanent": true
+    },
+    {
+      "source": "/privacy/index.html",
+      "destination": "/privacy/",
+      "permanent": true
+    },
+    {
+      "source": "/terms",
+      "destination": "/terms/",
+      "permanent": true
+    },
+    {
+      "source": "/terms/index.html",
+      "destination": "/terms/",
+      "permanent": true
+    }
+  ]
 }
