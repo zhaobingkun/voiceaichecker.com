@@ -67,10 +67,25 @@
       <section class="tool-grid" aria-labelledby="page-title">
         <div class="intro">
           <p class="eyebrow">Free short audio check</p>
-          <h1 id="page-title">AI Voice Detector</h1>
+          <h1 id="page-title">Check the voice, not the rumor.</h1>
           <p class="summary">
-            Check a voice clip for AI-generation signals. The MVP analyzes short samples and returns a probability-style result.
+            Upload or record a short clip to screen for generated, cloned, or deepfake voice signals. The result is a
+            probability-style lead, not a forensic verdict.
           </p>
+          <div class="signal-strip" aria-hidden="true">
+            <span style="--level: 36%"></span>
+            <span style="--level: 64%"></span>
+            <span style="--level: 42%"></span>
+            <span style="--level: 86%"></span>
+            <span style="--level: 54%"></span>
+            <span style="--level: 72%"></span>
+            <span style="--level: 30%"></span>
+            <span style="--level: 58%"></span>
+            <span style="--level: 92%"></span>
+            <span style="--level: 48%"></span>
+            <span style="--level: 76%"></span>
+            <span style="--level: 38%"></span>
+          </div>
           <div class="trust-row" aria-label="Service limits">
             <span>30 sec max</span>
             <span>Browser trimmed</span>
@@ -79,6 +94,10 @@
         </div>
 
         <div class="detector-panel">
+          <div class="panel-heading">
+            <span>Input desk</span>
+            <strong>Short sample only</strong>
+          </div>
           <div class="tabs" role="tablist" aria-label="Audio source">
             <button class="tab is-active" id="upload-tab" type="button" role="tab" aria-selected="true">Upload</button>
             <button class="tab" id="record-tab" type="button" role="tab" aria-selected="false">Record</button>
