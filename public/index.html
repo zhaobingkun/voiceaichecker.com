@@ -25,7 +25,7 @@
     />
     <meta name="twitter:image" content="https://voiceaichecker.com/assets/voice-detection-hero.png" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/styles.css?v=20260616-pd2" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -66,37 +66,29 @@
 
       <section class="tool-grid" aria-labelledby="page-title">
         <div class="intro">
-          <p class="eyebrow">Free short audio check</p>
-          <h1 id="page-title">Check the voice, not the rumor.</h1>
+          <p class="eyebrow">Free AI voice screening</p>
+          <h1 id="page-title">Screen a voice clip for AI signals.</h1>
           <p class="summary">
-            Upload or record a short clip to screen for generated, cloned, or deepfake voice signals. The result is a
-            probability-style lead, not a forensic verdict.
+            Upload or record a short sample and get a probability-style read on generated, cloned, or deepfake voice
+            signals. Use the score as a lead, then verify important claims through another channel.
           </p>
-          <div class="signal-strip" aria-hidden="true">
-            <span style="--level: 36%"></span>
-            <span style="--level: 64%"></span>
-            <span style="--level: 42%"></span>
-            <span style="--level: 86%"></span>
-            <span style="--level: 54%"></span>
-            <span style="--level: 72%"></span>
-            <span style="--level: 30%"></span>
-            <span style="--level: 58%"></span>
-            <span style="--level: 92%"></span>
-            <span style="--level: 48%"></span>
-            <span style="--level: 76%"></span>
-            <span style="--level: 38%"></span>
-          </div>
+          <a class="hero-action" href="#detector">Check audio now</a>
           <div class="trust-row" aria-label="Service limits">
             <span>30 sec max</span>
-            <span>Browser trimmed</span>
-            <span>Login optional</span>
+            <span>One speaker works best</span>
+            <span>Optional Google login</span>
           </div>
         </div>
 
-        <div class="detector-panel">
+        <div class="detector-panel" id="detector">
           <div class="panel-heading">
-            <span>Input desk</span>
-            <strong>Short sample only</strong>
+            <span>Analyze sample</span>
+            <strong>3 free checks daily</strong>
+          </div>
+          <div class="detector-steps" aria-label="Detection workflow">
+            <span><b>1</b> Add audio</span>
+            <span><b>2</b> Pick window</span>
+            <span><b>3</b> Read score</span>
           </div>
           <div class="tabs" role="tablist" aria-label="Audio source">
             <button class="tab is-active" id="upload-tab" type="button" role="tab" aria-selected="true">Upload</button>
@@ -107,8 +99,8 @@
             <label class="drop-zone" id="drop-zone">
               <input id="file-input" type="file" accept="audio/*,video/mp4,video/quicktime,video/webm" />
               <span class="drop-icon" aria-hidden="true">+</span>
-              <span class="drop-title">Choose audio</span>
-              <span class="drop-meta">MP3, WAV, M4A, OGG, MP4, WEBM</span>
+              <span class="drop-title">Upload a voice sample</span>
+              <span class="drop-meta">MP3, WAV, M4A, OGG, MP4, or WEBM</span>
             </label>
           </div>
 
@@ -141,7 +133,34 @@
           </div>
 
           <button class="primary-button" id="detect-button" type="button" disabled>Detect voice</button>
-          <p class="status" id="status" role="status"></p>
+          <p class="status" id="status" role="status">Choose or record audio to start.</p>
+        </div>
+
+        <div class="evidence-card" aria-label="Best sample guidance">
+          <div class="signal-strip" aria-hidden="true">
+            <span style="--level: 36%"></span>
+            <span style="--level: 64%"></span>
+            <span style="--level: 42%"></span>
+            <span style="--level: 86%"></span>
+            <span style="--level: 54%"></span>
+            <span style="--level: 72%"></span>
+            <span style="--level: 30%"></span>
+            <span style="--level: 58%"></span>
+            <span style="--level: 92%"></span>
+            <span style="--level: 48%"></span>
+            <span style="--level: 76%"></span>
+            <span style="--level: 38%"></span>
+          </div>
+          <dl class="sample-criteria">
+            <div>
+              <dt>Best input</dt>
+              <dd>Clean speech, 10-30 seconds</dd>
+            </div>
+            <div>
+              <dt>Watch out</dt>
+              <dd>Music, noise, edits, compression</dd>
+            </div>
+          </dl>
         </div>
       </section>
 

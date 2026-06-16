@@ -207,7 +207,7 @@ const setSelectedFile = async (file) => {
   fileRow.hidden = false;
   detectButton.disabled = false;
   resultSection.hidden = true;
-  setStatus("");
+  setStatus(`Ready to analyze up to ${secondsInput.value} seconds.`);
   await drawFileWaveform(file);
 };
 
@@ -217,7 +217,7 @@ const clearSelectedFile = () => {
   fileRow.hidden = true;
   detectButton.disabled = true;
   resultSection.hidden = true;
-  setStatus("");
+  setStatus("Choose or record audio to start.");
   drawEmptyWaveform();
 };
 
@@ -455,6 +455,7 @@ if (hasDetectorUi) {
   secondsInput.addEventListener("input", () => {
     secondsOutput.value = `${secondsInput.value}s`;
     secondsOutput.textContent = `${secondsInput.value}s`;
+    if (selectedFile) setStatus(`Ready to analyze up to ${secondsInput.value} seconds.`);
   });
 
   detectButton.addEventListener("click", detectSelectedFile);
