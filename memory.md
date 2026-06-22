@@ -23,3 +23,8 @@
 
 - 支付上线执行顺序：先复核并提交当前测试与 webhook 修复，再部署到 Vercel 测试/预览环境；随后配置 Creem、Supabase、Google 登录和应用域名环境变量；在 Creem 测试模式验证 checkout、webhook、Supabase 订阅写入、`/api/me` Pro 权限、配额、取消和退款；全部通过后再切生产配置。
 - 当前禁止直接宣布支付可用：线上尚未验证，且本地修复与测试仍未提交和部署。
+- Creem 复审反馈要求公开 AI 检测服务商或模型。已在首页、隐私政策、条款和价格页明确披露：在线检测由 Modulate 的 Velma-2 Synthetic Voice Detection API 提供；Mock 结果仅为演示模式。
+- 新增合规回归测试，连同支付测试共 7 项通过。修改与此前 webhook 可靠性修复已提交为 `1d0ff85` 并推送到 `main`；生产隐私页已确认显示 2026-06-23 更新日期、Modulate 和 Velma-2 文案。
+- Creem 官方清单还要求可用的品牌支持邮箱，以及用户能从产品内直接取消订阅（Cancel Subscription API 或 Creem Customer Portal）。当前网站只公开 Gmail，`voiceaichecker.com` 查询不到 MX 记录；项目也没有取消/Portal 入口。这两个问题解决前不应点击 Request re-review。
+- Creem 复审入口：Live mode 下进入 `Balance → Payout Account`，点击 `Request re-review`。提交该外部动作前需确认网站已部署、品牌邮箱可收件、取消入口可用。
+- 用户决定继续使用 `bingkun.zhao@gmail.com` 作为公开客服邮箱。该地址已用于价格、隐私、条款和退款页面，并补充到首页 Customer Support 区块与页脚；需注意 Creem 清单偏好品牌域名邮箱，因此复审仍存在被要求改为域名邮箱的风险。
