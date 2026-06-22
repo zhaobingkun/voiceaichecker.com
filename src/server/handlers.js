@@ -310,10 +310,18 @@ export const handleCreemWebhook = async (req, res) => {
   const subscriptionUpdate = subscriptionUpdateFromCreemEvent(event);
   const upsertResult = await upsertSubscription(subscriptionUpdate);
 
+  if (!upsertResult.ok) {
+    sendJson(res, 503, {
+      error: "Subscription update was not persisted",
+      reason: upsertResult.reason || (upsertResult.skipped ? "storage_not_configured" : "unknown")
+    });
+    return;
+  }
+
   console.log("Creem webhook received", {
     type: event.type || event.event_type || event.event || "unknown",
     id: event.id || event.object?.id || event.data?.id || "unknown",
-    subscriptionUpdated: Boolean(upsertResult.ok)
+    subscriptionUpdated: true
   });
 
   sendJson(res, 200, { ok: true });

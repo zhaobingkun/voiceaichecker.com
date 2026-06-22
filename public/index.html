@@ -220,7 +220,8 @@
         <p class="answer">
           This free AI voice detector checks a short audio sample and returns a probability-style result. It is useful
           for quick screening when a voice sounds synthetic, cloned, or suspicious, but it should not be treated as a
-          final forensic decision.
+          final forensic decision. Live detection is powered by
+          <a href="https://www.modulate.ai/">Modulate</a>'s Velma-2 Synthetic Voice Detection API.
         </p>
         <h2 id="how-it-works">How the AI Voice Detector Works</h2>
         <div class="content-grid">
@@ -230,7 +231,10 @@
           </article>
           <article class="info-card">
             <h3>Analyze the first seconds</h3>
-            <p>The server enforces the selected analysis window, so long files are not sent in full to the detector.</p>
+            <p>
+              The server enforces the selected analysis window, then sends that short sample to Modulate's Velma-2
+              Synthetic Voice Detection API. Long files are not sent in full to the detector.
+            </p>
           </article>
           <article class="info-card">
             <h3>Review the probability</h3>
@@ -303,9 +307,10 @@
         <h2 id="privacy-limits">Privacy and Limits</h2>
         <p class="answer">
           The browser prepares a short WAV sample before upload, and the server enforces the selected analysis window
-          again before calling the detection provider. The app is designed for short screening, not long-term audio
-          storage. Do not upload private, confidential, or legally sensitive audio unless you are comfortable having a
-          short sample processed by the detection provider.
+          again before sending it to Modulate's Velma-2 Synthetic Voice Detection API. The app is designed for short
+          screening, not long-term audio storage. Do not upload private, confidential, or legally sensitive audio unless
+          you are comfortable having a short sample processed by Modulate. If the result panel identifies the provider
+          as "Mock," the app is operating in demo mode and the result was not produced by Velma-2.
         </p>
       </section>
 

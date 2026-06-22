@@ -32,7 +32,7 @@
       <article class="legal-page">
         <p class="eyebrow">Privacy Policy</p>
         <h1>Privacy Policy</h1>
-        <p>Last updated: June 14, 2026</p>
+        <p>Last updated: June 23, 2026</p>
 
         <h2>What We Collect</h2>
         <p>
@@ -44,8 +44,8 @@
         <h2>How Audio Is Processed</h2>
         <p>
           The browser prepares the selected audio and sends a short WAV sample to our server. The server enforces the
-          configured analysis window and sends that sample to our detection provider. Audio is processed for detection
-          only and is not used by this app to train models.
+          configured analysis window and sends that sample to Modulate's Velma-2 Synthetic Voice Detection API. Audio
+          is processed for detection only and is not used by this app to train models.
         </p>
 
         <h2>Storage</h2>
@@ -63,9 +63,11 @@
 
         <h2>Third-Party Processing</h2>
         <p>
-          Audio samples are sent to a third-party detection provider for analysis. Their own data processing terms may
-          apply. Do not upload private, confidential, or legally sensitive audio unless you are comfortable with this
-          processing.
+          Our live AI voice detection provider is <a href="https://www.modulate.ai/">Modulate</a>, and the detection
+          model/API used by this service is Velma-2 Synthetic Voice Detection. The selected short audio sample is sent
+          to Modulate for analysis, so Modulate's own data processing terms may apply. Do not upload private,
+          confidential, or legally sensitive audio unless you are comfortable with this processing. If the result panel
+          identifies the provider as "Mock," the app is operating in demo mode and no sample is sent to Modulate.
         </p>
 
         <h2>Payments</h2>
