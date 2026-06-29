@@ -60,6 +60,26 @@
         ]
       }
     </script>
+    <script type="application/ld+json">
+      {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                  {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "https://voiceaichecker.com/"
+                  },
+                  {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Deepfake Audio Detector",
+                        "item": "https://voiceaichecker.com/deepfake-audio-detector/"
+                  }
+            ]
+      }
+    </script>
   </head>
   <body>
     <main class="app-shell">
@@ -69,6 +89,12 @@
         <nav class="main-nav" aria-label="Primary"><a href="/">Home</a><a href="/free-ai-voice-detector/">Free Detector</a><a href="/ai-audio-detector/">AI Audio</a><a href="/deepfake-audio-detector/">Deepfake Audio</a><a href="/voice-clone-detector/">Voice Clone</a><a href="/ai-voice-checker/">Voice Checker</a><a href="/is-this-voice-ai/">Is This AI?</a></nav>
         <div class="auth-area"><a class="google-button" id="login-link" href="/auth/google"><span class="google-mark" aria-hidden="true">G</span><span>Sign in with Google</span></a><div class="user-menu" id="user-menu" hidden><img id="user-picture" alt="" /><span id="user-name">Account</span><button class="text-button" id="logout-button" type="button">Sign out</button></div></div>
       </header>
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <span>Deepfake Audio Detector</span>
+      </nav>
+
       <section class="tool-grid" aria-labelledby="page-title">
         <div class="intro"><p class="eyebrow">Fraud and impersonation screening</p><h1 id="page-title">Deepfake Audio Detector</h1><p class="summary">Check a suspicious voice message before you send money, share private information, or accept that the speaker is real.</p><div class="trust-row" aria-label="Service limits"><span>Scam-aware</span><span>30 sec max</span><span>No login required</span></div></div>
         <div class="detector-panel">

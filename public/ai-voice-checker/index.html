@@ -60,10 +60,36 @@
         ]
       }
     </script>
+    <script type="application/ld+json">
+      {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                  {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "https://voiceaichecker.com/"
+                  },
+                  {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "AI Voice Checker",
+                        "item": "https://voiceaichecker.com/ai-voice-checker/"
+                  }
+            ]
+      }
+    </script>
   </head>
   <body>
     <main class="app-shell">
       <header class="topbar" aria-label="Account"><a class="brand-link" href="/" aria-label="AI Voice Detector home"><img class="brand-icon" src="/favicon.svg" alt="" /><span>AI Voice Detector</span></a><div class="quota-chip" id="quota-chip">Free checks loading</div><nav class="main-nav" aria-label="Primary"><a href="/">Home</a><a href="/free-ai-voice-detector/">Free Detector</a><a href="/ai-audio-detector/">AI Audio</a><a href="/deepfake-audio-detector/">Deepfake Audio</a><a href="/voice-clone-detector/">Voice Clone</a><a href="/ai-voice-checker/">Voice Checker</a><a href="/is-this-voice-ai/">Is This AI?</a></nav><div class="auth-area"><a class="google-button" id="login-link" href="/auth/google"><span class="google-mark" aria-hidden="true">G</span><span>Sign in with Google</span></a><div class="user-menu" id="user-menu" hidden><img id="user-picture" alt="" /><span id="user-name">Account</span><button class="text-button" id="logout-button" type="button">Sign out</button></div></div></header>
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <span>AI Voice Checker</span>
+      </nav>
+
       <section class="tool-grid" aria-labelledby="page-title">
         <div class="intro"><p class="eyebrow">Fast voice review</p><h1 id="page-title">AI Voice Checker</h1><p class="summary">Run a quick check when a voice clip sounds too polished, too urgent, or simply different from how the speaker normally sounds.</p><div class="trust-row" aria-label="Service limits"><span>Quick check</span><span>30 sec max</span><span>Free daily use</span></div></div>
         <div class="detector-panel">

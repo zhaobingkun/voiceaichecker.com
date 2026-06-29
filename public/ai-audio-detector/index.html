@@ -63,6 +63,26 @@
         ]
       }
     </script>
+    <script type="application/ld+json">
+      {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                  {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "https://voiceaichecker.com/"
+                  },
+                  {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "AI Audio Detector",
+                        "item": "https://voiceaichecker.com/ai-audio-detector/"
+                  }
+            ]
+      }
+    </script>
   </head>
   <body>
     <main class="app-shell">
@@ -75,6 +95,12 @@
           <div class="user-menu" id="user-menu" hidden><img id="user-picture" alt="" /><span id="user-name">Account</span><button class="text-button" id="logout-button" type="button">Sign out</button></div>
         </div>
       </header>
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <span>AI Audio Detector</span>
+      </nav>
+
 
       <section class="tool-grid" aria-labelledby="page-title">
         <div class="intro">

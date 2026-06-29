@@ -51,3 +51,21 @@ test("core SEO pages expose valid FAQPage structured data", async () => {
     assert.ok(faqNode.mainEntity.length >= 3, `${page} FAQPage should include at least 3 questions`);
   }
 });
+
+test("core SEO pages expose visible breadcrumbs and BreadcrumbList structured data", async () => {
+  for (const page of seoFaqPages) {
+    const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
+    assert.match(html, /<nav class="breadcrumb" aria-label="Breadcrumb">/, `${page} must show a breadcrumb trail`);
+
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+    const breadcrumbNode = blocks
+      .map((match) => JSON.parse(match[1]))
+      .flatMap((data) => (Array.isArray(data["@graph"]) ? data["@graph"] : [data]))
+      .find((node) => node["@type"] === "BreadcrumbList");
+
+    assert.ok(breadcrumbNode, `${page} must include BreadcrumbList structured data`);
+    assert.ok(Array.isArray(breadcrumbNode.itemListElement), `${page} BreadcrumbList must include itemListElement`);
+    assert.ok(breadcrumbNode.itemListElement.length >= 1, `${page} BreadcrumbList should include at least Home`);
+    assert.equal(breadcrumbNode.itemListElement[0].item, "https://voiceaichecker.com/");
+  }
+});
