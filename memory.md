@@ -41,3 +41,4 @@
 - 已为 8 个核心 SEO 页面补充可见面包屑和有效 `BreadcrumbList` JSON-LD；首页面包屑为 Home，其余落地页为 Home → 当前页。新增回归测试确保核心页同时具备可见 breadcrumb 和 BreadcrumbList structured data。Node v24 执行测试共 10 项通过，正文词数仍全部保持 600+。
 - 已新增 `public/robots.txt` 和 `public/sitemap.xml`。sitemap 覆盖 12 个公开 HTML 页面：主页、7 个核心检测落地页、pricing、privacy、terms、refund-policy。新增 SEO 基础回归测试：检查公开 HTML 页 title、meta description、canonical、og:url、OG/Twitter、favicon、viewport；检查 robots 指向 sitemap，且 sitemap 包含所有公开 HTML canonical URL。Node v24 执行测试共 12 项通过。
 - 已新增内链回归测试：自动枚举 `public/` 下所有 HTML 文件，确保全部被 SEO 页面清单覆盖；确保首页链接到 sitemap 中的每个公开 HTML URL；确保所有站内静态 `href` 都能解析到实际存在的 `public` 目标，动态 `/auth/`、`/api/` 和外链/邮件链接除外。Node v24 执行测试共 15 项通过。
+- 用户反馈 Creem 审核已经通过。当前从 SEO/合规页面角度可以发布；但正式开放付费前仍建议完成一次真实端到端支付验收：Creem checkout、webhook、Supabase 订阅写入、`/api/me` Pro 权限、配额、取消订阅和退款/失败场景。
