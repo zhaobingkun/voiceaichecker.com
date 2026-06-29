@@ -36,3 +36,4 @@
 - 首页正文有效词数约 1100，符合手册中首页至少 600-800 词、必要时可扩到 1200-1800 词的要求；`/free-ai-voice-detector/` 有效正文约 640 词，其他长尾页约 370-510 词，后续如继续做 SEO 可逐步补到 600+。
 - 修改覆盖 `public/index.html`、`public/free-ai-voice-detector/index.html`、`public/ai-audio-detector/index.html`、`public/deepfake-audio-detector/index.html`、`public/voice-clone-detector/index.html`、`public/ai-voice-checker/index.html`、`public/voice-ai-checker/index.html`、`public/is-this-voice-ai/index.html`。
 - 验证：`git diff --check` 通过；Node v24 执行 `--test test/*.test.js` 共 8 项通过。Creem 要求的 Modulate / Velma-2 披露和 Gmail 客服邮箱仍保留。
+- 继续加厚核心落地页后，严格按正文区域统计（排除 header/footer/script/style）词数：`index` 约 1101，`free-ai-voice-detector` 约 640，`ai-audio-detector` 约 627，`deepfake-audio-detector` 约 602，`voice-clone-detector` 约 611，`ai-voice-checker` 约 600，`voice-ai-checker` 约 640，`is-this-voice-ai` 约 601。8 个核心 SEO 页面均达到 600+ 正文词量。
