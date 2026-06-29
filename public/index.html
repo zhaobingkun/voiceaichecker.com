@@ -69,8 +69,9 @@
           <p class="eyebrow">Free AI voice screening</p>
           <h1 id="page-title">Screen a voice clip for AI signals.</h1>
           <p class="summary">
-            Upload or record a short sample and get a probability-style read on generated, cloned, or deepfake voice
-            signals. Use the score as a lead, then verify important claims through another channel.
+            Upload a voice note, record a quick sample, or check a short clip before you trust it. The detector gives a
+            plain AI-risk signal for generated, cloned, or deepfake-style speech, then tells you when the result needs
+            more context.
           </p>
           <a class="hero-action" href="#detector">Check audio now</a>
           <div class="trust-row" aria-label="Service limits">
@@ -218,33 +219,46 @@
 
       <section class="content-section" aria-labelledby="how-it-works">
         <p class="answer">
-          This free AI voice detector checks a short audio sample and returns a probability-style result. It is useful
-          for quick screening when a voice sounds synthetic, cloned, or suspicious, but it should not be treated as a
-          final forensic decision. Live detection is powered by
+          This free AI voice detector is built for the moment when a clip sounds wrong and you need a quick second read.
+          It checks a short speech sample and returns a probability-style result, not a courtroom answer. Use it for
+          first-pass screening, then confirm important requests, identities, or claims through a channel you already
+          trust. Live detection is powered by
           <a href="https://www.modulate.ai/">Modulate</a>'s Velma-2 Synthetic Voice Detection API.
         </p>
         <h2 id="how-it-works">How the AI Voice Detector Works</h2>
         <div class="content-grid">
           <article class="info-card">
-            <h3>Upload or record a sample</h3>
-            <p>Choose a voice clip or record one in the browser. The app prepares a short WAV sample before detection.</p>
-          </article>
-          <article class="info-card">
-            <h3>Analyze the first seconds</h3>
+            <h3>Start with the clearest speech</h3>
             <p>
-              The server enforces the selected analysis window, then sends that short sample to Modulate's Velma-2
-              Synthetic Voice Detection API. Long files are not sent in full to the detector.
+              Pick 10-30 seconds where one person is speaking normally. A short, clean section is usually more useful
+              than a full file with music, edits, silence, or multiple speakers.
             </p>
           </article>
           <article class="info-card">
-            <h3>Review the probability</h3>
-            <p>Results are shown as likely AI, likely human, or unclear, with confidence and a short explanation.</p>
+            <h3>Only the selected window is analyzed</h3>
+            <p>
+              The server enforces the selected analysis window, then sends that short sample to Modulate's Velma-2
+              Synthetic Voice Detection API. Long uploads are trimmed for detection instead of being sent in full to the
+              model.
+            </p>
+          </article>
+          <article class="info-card">
+            <h3>Read the label with context</h3>
+            <p>
+              Results appear as likely AI, likely human, or unclear. The confidence score is a screening signal; the
+              source, speaker behavior, and recording quality still matter.
+            </p>
           </article>
         </div>
       </section>
 
       <section class="content-section" aria-labelledby="when-to-use">
         <h2 id="when-to-use">When to Use an AI Voice Detector</h2>
+        <p class="answer">
+          Voice scams and synthetic narration often show up in short clips: a voicemail from an unknown number, a social
+          post with no source, a polished ad voiceover, or a message that asks you to act fast. Those are good moments to
+          run a check. The goal is not to accuse anyone; it is to slow the decision down and look for more evidence.
+        </p>
         <div class="content-grid">
           <article class="info-card">
             <h3>Suspicious voice messages</h3>
@@ -273,10 +287,10 @@
       <section class="content-section" aria-labelledby="read-results">
         <h2 id="read-results">How to Read the Result</h2>
         <p class="answer">
-          The result is a risk signal, not a legal or forensic conclusion. "Likely AI" means the sample has signals that
-          resemble generated or synthetic speech. "Likely human" means the sample did not show a strong AI signal in the
-          analyzed window. "Unclear" means the signal is not strong enough either way, often because the clip is short,
-          noisy, compressed, mixed with music, or contains more than one speaker.
+          Treat the result as a risk signal. "Likely AI" means the analyzed speech has patterns that resemble synthetic
+          or generated voice. "Likely human" means the selected window did not show a strong AI signal. "Unclear" means
+          the detector could not make a useful call, which often happens with short clips, compression, background music,
+          speaker overlap, or aggressive noise reduction.
         </p>
         <div class="content-grid">
           <article class="info-card">
@@ -312,6 +326,12 @@
           you are comfortable having a short sample processed by Modulate. If the result panel identifies the provider
           as "Mock," the app is operating in demo mode and the result was not produced by Velma-2.
         </p>
+        <p class="answer">
+          A detector can miss a well-made clone, and it can also flag real speech when the recording is poor. For anything
+          that affects money, access, employment, reporting, legal claims, or personal safety, use the result as one data
+          point. Call the person back on a known number, check the original source, ask for a live response, or compare
+          the clip with trusted recordings.
+        </p>
       </section>
 
       <section class="content-section" aria-labelledby="free-first-pricing">
@@ -319,7 +339,8 @@
         <p class="answer">
           AI Voice Detector is free-first. Basic checks remain available without checkout: 3 checks per day without
           login, or 10 free checks per day with optional Google login. Pro is $9.90 per month and includes up to 20
-          checks per day for signed-in users.
+          checks per day for signed-in users. If you only need to check the occasional voice note, the free limit is meant
+          to be enough; Pro is for repeated review work.
         </p>
         <div class="related-grid">
           <a class="related-card" href="/pricing/">
@@ -372,11 +393,21 @@
         <div class="faq-grid">
           <article class="faq-item">
             <h3>Can this prove a voice is AI?</h3>
-            <p>No. The result is a detection signal, not proof. Use it with context, source checks, and human review.</p>
+            <p>
+              No. It can point to AI-like speech patterns, but it cannot prove who made the clip or whether a recording is
+              authentic. Use it with source checks and human review.
+            </p>
           </article>
           <article class="faq-item">
             <h3>Do I need to log in?</h3>
-            <p>No. Login is optional. Signing in only gives a higher free daily limit.</p>
+            <p>No. You can run basic checks without an account. Signing in with Google only raises the free daily limit.</p>
+          </article>
+          <article class="faq-item">
+            <h3>What should I upload?</h3>
+            <p>
+              Use a speech-only section with one speaker. Avoid songs, crowd noise, phone hold music, and clips where the
+              suspicious voice is only a small part of the file.
+            </p>
           </article>
         </div>
       </section>

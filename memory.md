@@ -28,3 +28,11 @@
 - Creem 官方清单还要求可用的品牌支持邮箱，以及用户能从产品内直接取消订阅（Cancel Subscription API 或 Creem Customer Portal）。当前网站只公开 Gmail，`voiceaichecker.com` 查询不到 MX 记录；项目也没有取消/Portal 入口。这两个问题解决前不应点击 Request re-review。
 - Creem 复审入口：Live mode 下进入 `Balance → Payout Account`，点击 `Request re-review`。提交该外部动作前需确认网站已部署、品牌邮箱可收件、取消入口可用。
 - 用户决定继续使用 `bingkun.zhao@gmail.com` 作为公开客服邮箱。该地址已用于价格、隐私、条款和退款页面，并补充到首页 Customer Support 区块与页脚；需注意 Creem 清单偏好品牌域名邮箱，因此复审仍存在被要求改为域名邮箱的风险。
+- 品牌客服邮箱建议使用 `support@voiceaichecker.com`。免费方案可先用 Cloudflare Email Routing 做收信转发到 Gmail，但它不是完整发信邮箱；如需完整收发和更高审核可信度，可选 Zoho Mail、Google Workspace 或 Microsoft 365，并按服务商要求配置域名 MX/SPF/DKIM/DMARC。
+
+## 2026-06-29
+
+- 按 `/Users/zhaobingkun/doc/SEO-SITE-PLAYBOOK.md` 优化文案，重点减少首页和核心落地页的模板化 AI 味：补充真实使用场景、取样建议、误判边界、结果解读和下一步验证动作。
+- 首页正文有效词数约 1100，符合手册中首页至少 600-800 词、必要时可扩到 1200-1800 词的要求；`/free-ai-voice-detector/` 有效正文约 640 词，其他长尾页约 370-510 词，后续如继续做 SEO 可逐步补到 600+。
+- 修改覆盖 `public/index.html`、`public/free-ai-voice-detector/index.html`、`public/ai-audio-detector/index.html`、`public/deepfake-audio-detector/index.html`、`public/voice-clone-detector/index.html`、`public/ai-voice-checker/index.html`、`public/voice-ai-checker/index.html`、`public/is-this-voice-ai/index.html`。
+- 验证：`git diff --check` 通过；Node v24 执行 `--test test/*.test.js` 共 8 项通过。Creem 要求的 Modulate / Velma-2 披露和 Gmail 客服邮箱仍保留。
