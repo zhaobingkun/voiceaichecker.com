@@ -30,34 +30,42 @@
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "Does this detect music?",
+            "name": "Is this an AI music detector?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No. This tool is focused on speech and voice signals, not music generation detection."
+              "text": "No. This page is focused on spoken voice in audio or video files. It does not classify generated music, beats, instruments, or singing."
             }
           },
           {
             "@type": "Question",
-            "name": "Can I upload a long file?",
+            "name": "Should I upload the whole audio file?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "The browser prepares a short sample and the server enforces the selected analysis window."
+              "text": "Usually no. Use the clearest speech section connected to the claim or voice you need to review. A focused sample is more useful than a long mixed file."
             }
           },
           {
             "@type": "Question",
-            "name": "Should I test the same file twice?",
+            "name": "What kind of audio sample works best?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "If the first result is unclear, test a different clean speech section from the same speaker. Similar results across sections are more useful than one noisy sample."
+              "text": "Use 10 to 30 seconds of one clear speaker, normal volume, little background noise, and minimal editing or platform compression."
             }
           },
           {
             "@type": "Question",
-            "name": "Can this tell me which AI tool made the audio?",
+            "name": "Can it identify which AI tool made the narration?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "No. The result is about AI-like speech signals. It does not identify the generator, editing software, or person who produced the file."
+              "text": "No. The result is about AI-like speech signals. It does not identify the generator, editing software, model, or person who produced the file."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why can a real recording look synthetic?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Compression, noise removal, bad microphones, screen recording, translation dubbing, and speakerphone playback can make real speech sound less natural."
             }
           }
         ]
@@ -148,6 +156,40 @@
       </section>
 
       <section class="content-section">
+        <h2>How It Works for Audio File Review</h2>
+        <p class="answer">This page is built for people reviewing a media file that contains speech: a podcast clip, short video, ad voiceover, training sample, product demo, or social post narration. Instead of treating the whole file as one question, pick the section where the voice matters. The browser prepares a short analysis window, the detector reviews the selected speech, and the result gives you a probability-style signal about whether that voice sounds AI-generated or human.</p>
+        <p class="answer">That workflow is different from checking a single private voice message. Media files often contain intro music, edits, transitions, background effects, and platform compression. A clean speech segment is more meaningful than a full upload with mixed conditions. If the file has more than one speaker, test the suspicious speaker separately and write down which section was checked.</p>
+        <p class="answer">Use the result as a review step before publishing, quoting, approving, or archiving the audio. If the file is high-stakes, keep the original source link, note the upload platform, and compare the detector result with context such as creator history, transcripts, metadata, and whether the same audio appears on verified channels.</p>
+      </section>
+
+      <section class="content-section">
+        <h2>What We Analyze in Audio Files</h2>
+        <p class="answer">The detector analyzes the spoken voice in the selected clip. It looks for signals associated with synthetic speech, such as overly smooth delivery, unusual timing, inconsistent voice texture, or artifacts that can appear after generation and compression. It does not analyze the truth of the spoken claim, the identity of the speaker, the visual track in a video, or whether the background music was generated.</p>
+        <p class="answer">The strongest samples contain one speaker, natural speech, stable volume, and enough words to capture rhythm. A narration clip with a clear voiceover usually works better than a noisy livestream, a song, a crowd recording, or a file where the voice is buried under effects. If you are reviewing a video, the relevant part is still the voice, not the camera quality or caption text.</p>
+      </section>
+
+      <section class="content-section">
+        <h2>Limitations of AI Audio Detection</h2>
+        <p class="answer">AI audio detection cannot prove that an entire media file is fake. A video can contain real footage with synthetic narration, generated visuals with a human narrator, edited speech from a real interview, or a mixture of human and AI segments. The detector only comments on the selected speech window.</p>
+        <p class="answer">Long files can also create misleading confidence. A podcast may include clean studio audio, phone-call inserts, ads, and music beds in one upload. A single overall score would hide those differences. For serious review, test the relevant segment and compare several clean sections instead of repeating the same noisy part until the answer changes.</p>
+        <p class="answer">Low-risk results should not be treated as proof of authenticity. High-risk results should not be treated as proof of deception. Use the output to decide whether the audio deserves source verification, manual review, or a request for an original file.</p>
+      </section>
+
+      <section class="content-section">
+        <h2>Supported Formats</h2>
+        <p class="answer">The upload flow accepts common audio and short video containers, including MP3, WAV, M4A, OGG, MP4, and WEBM. Speech-only files are easiest to interpret, but short videos can be useful when the voiceover is clear. For best results, use 10 to 30 seconds of one speaker, avoid heavy background music, and avoid clips that have been re-recorded through another device.</p>
+      </section>
+
+      <section class="content-section">
+        <h2>Examples and Sample Cases</h2>
+        <div class="content-grid">
+          <article class="info-card"><h3>Ad voiceover</h3><p>A brand receives a polished audio ad from a contractor. Check the narration section before approval, then confirm licensing and production notes separately.</p></article>
+          <article class="info-card"><h3>Podcast excerpt</h3><p>A short clip claims a host said something controversial. Test the clean speech, then look for the original episode, timestamp, and transcript.</p></article>
+          <article class="info-card"><h3>Social video narration</h3><p>A viral video uses a confident voice to explain an event. Check whether the narration sounds synthetic, then verify the source and supporting evidence.</p></article>
+        </div>
+      </section>
+
+      <section class="content-section">
         <h2>Related Checks</h2>
         <div class="related-grid">
           <a class="related-card" href="/"><strong>AI Voice Detector</strong><span>Start with the main free voice detector.</span></a>
@@ -161,10 +203,11 @@
       <section class="content-section">
         <h2>AI Audio Detector FAQ</h2>
         <div class="faq-grid">
-          <article class="faq-item"><h3>Does this detect music?</h3><p>No. This tool is focused on speech and voice signals, not music generation detection.</p></article>
-          <article class="faq-item"><h3>Can I upload a long file?</h3><p>The browser prepares a short sample and the server enforces the selected analysis window.</p></article>
-          <article class="faq-item"><h3>Should I test the same file twice?</h3><p>If the first result is unclear, test a different clean speech section from the same speaker. Similar results across sections are more useful than one noisy sample.</p></article>
-          <article class="faq-item"><h3>Can this tell me which AI tool made the audio?</h3><p>No. The result is about AI-like speech signals. It does not identify the generator, editing software, or person who produced the file.</p></article>
+          <article class="faq-item"><h3>Is this an AI music detector?</h3><p>No. This page is focused on spoken voice in audio or video files. It does not classify generated music, beats, instruments, or singing.</p></article>
+          <article class="faq-item"><h3>Should I upload the whole audio file?</h3><p>Usually no. Use the clearest speech section connected to the claim or voice you need to review. A focused sample is more useful than a long mixed file.</p></article>
+          <article class="faq-item"><h3>What kind of audio sample works best?</h3><p>Use 10 to 30 seconds of one clear speaker, normal volume, little background noise, and minimal editing or platform compression.</p></article>
+          <article class="faq-item"><h3>Can it identify which AI tool made the narration?</h3><p>No. The result is about AI-like speech signals. It does not identify the generator, editing software, model, or person who produced the file.</p></article>
+          <article class="faq-item"><h3>Why can a real recording look synthetic?</h3><p>Compression, noise removal, bad microphones, screen recording, translation dubbing, and speakerphone playback can make real speech sound less natural.</p></article>
         </div>
       </section>
 

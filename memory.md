@@ -42,3 +42,11 @@
 - 已新增 `public/robots.txt` 和 `public/sitemap.xml`。sitemap 覆盖 12 个公开 HTML 页面：主页、7 个核心检测落地页、pricing、privacy、terms、refund-policy。新增 SEO 基础回归测试：检查公开 HTML 页 title、meta description、canonical、og:url、OG/Twitter、favicon、viewport；检查 robots 指向 sitemap，且 sitemap 包含所有公开 HTML canonical URL。Node v24 执行测试共 12 项通过。
 - 已新增内链回归测试：自动枚举 `public/` 下所有 HTML 文件，确保全部被 SEO 页面清单覆盖；确保首页链接到 sitemap 中的每个公开 HTML URL；确保所有站内静态 `href` 都能解析到实际存在的 `public` 目标，动态 `/auth/`、`/api/` 和外链/邮件链接除外。Node v24 执行测试共 15 项通过。
 - 用户反馈 Creem 审核已经通过。当前从 SEO/合规页面角度可以发布；但正式开放付费前仍建议完成一次真实端到端支付验收：Creem checkout、webhook、Supabase 订阅写入、`/api/me` Pro 权限、配额、取消订阅和退款/失败场景。
+
+## 2026-06-30
+
+- 用户反馈 Google Search Console 中 `/deepfake-audio-detector/`、`/voice-clone-detector/`、`/ai-audio-detector/`、`/ai-voice-checker/`、`/is-this-voice-ai/` 显示“已抓取 - 尚未编入索引”，判断主要风险是页面意图和模板结构过近、正文信息增量不足。
+- 已按用户建议为上述 5 页分别补充独立的 `How it works`、`What we analyze`、`Limitations`、`Supported formats`、`Examples / Sample Cases` 和重写 FAQ，避免同一套模板只替换关键词。
+- 严格按正文区域统计（排除 header/footer/script/style）词数：`deepfake-audio-detector` 约 1284，`voice-clone-detector` 约 1254，`ai-audio-detector` 约 1292，`ai-voice-checker` 约 1230，`is-this-voice-ai` 约 1265，均满足 1000-1500 词目标。
+- 新增回归测试锁定这 5 个 SEO 落地页正文词数在 1000-1500 范围内；Node v24 执行 `--test test/*.test.js` 共 16 项通过。
+- 发布后下一步建议：在 GSC 对这 5 个 URL 分别点击“请求编入索引”，然后观察 1-3 周，不要频繁反复提交；若仍未索引，再继续拉开搜索意图或增加真实示例、截图、对比表、使用教程等差异化内容。

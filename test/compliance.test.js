@@ -21,6 +21,14 @@ const seoFaqPages = [
   "public/is-this-voice-ai/index.html"
 ];
 
+const strengthenedSeoPages = [
+  "public/ai-audio-detector/index.html",
+  "public/deepfake-audio-detector/index.html",
+  "public/voice-clone-detector/index.html",
+  "public/ai-voice-checker/index.html",
+  "public/is-this-voice-ai/index.html"
+];
+
 const publicHtmlPages = [
   ["public/index.html", "https://voiceaichecker.com/"],
   ["public/free-ai-voice-detector/index.html", "https://voiceaichecker.com/free-ai-voice-detector/"],
@@ -80,11 +88,33 @@ function publicTargetExists(href) {
   return existsSync(new URL(`../public${cleanHref}`, import.meta.url));
 }
 
+function visibleBodyWordCount(html) {
+  const text = html
+    .replace(/<header[\s\S]*?<\/header>/gi, " ")
+    .replace(/<footer[\s\S]*?<\/footer>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&[a-z#0-9]+;/gi, " ");
+
+  return (text.match(/[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*/g) ?? []).length;
+}
+
 test("customer-facing pages disclose the live detection provider and model", async () => {
   for (const page of requiredDisclosurePages) {
     const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
     assert.match(html, /Modulate/i, `${page} must identify Modulate`);
     assert.match(html, /Velma-2 Synthetic Voice Detection/i, `${page} must identify Velma-2`);
+  }
+});
+
+test("strengthened SEO landing pages keep enough unique visible content", async () => {
+  for (const page of strengthenedSeoPages) {
+    const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
+    const wordCount = visibleBodyWordCount(html);
+
+    assert.ok(wordCount >= 1000, `${page} should keep at least 1000 visible body words, got ${wordCount}`);
+    assert.ok(wordCount <= 1500, `${page} should stay focused under 1500 visible body words, got ${wordCount}`);
   }
 });
 
