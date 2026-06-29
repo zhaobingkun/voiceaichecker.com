@@ -40,3 +40,4 @@
 - 已为 8 个核心 SEO 页面补充有效 `FAQPage` JSON-LD：`index`、`free-ai-voice-detector`、`ai-audio-detector`、`deepfake-audio-detector`、`voice-clone-detector`、`ai-voice-checker`、`voice-ai-checker`、`is-this-voice-ai`。新增合规测试确保这些页面包含可解析的 FAQPage structured data 且至少 3 个问题；Node v24 执行测试共 9 项通过。
 - 已为 8 个核心 SEO 页面补充可见面包屑和有效 `BreadcrumbList` JSON-LD；首页面包屑为 Home，其余落地页为 Home → 当前页。新增回归测试确保核心页同时具备可见 breadcrumb 和 BreadcrumbList structured data。Node v24 执行测试共 10 项通过，正文词数仍全部保持 600+。
 - 已新增 `public/robots.txt` 和 `public/sitemap.xml`。sitemap 覆盖 12 个公开 HTML 页面：主页、7 个核心检测落地页、pricing、privacy、terms、refund-policy。新增 SEO 基础回归测试：检查公开 HTML 页 title、meta description、canonical、og:url、OG/Twitter、favicon、viewport；检查 robots 指向 sitemap，且 sitemap 包含所有公开 HTML canonical URL。Node v24 执行测试共 12 项通过。
+- 已新增内链回归测试：自动枚举 `public/` 下所有 HTML 文件，确保全部被 SEO 页面清单覆盖；确保首页链接到 sitemap 中的每个公开 HTML URL；确保所有站内静态 `href` 都能解析到实际存在的 `public` 目标，动态 `/auth/`、`/api/` 和外链/邮件链接除外。Node v24 执行测试共 15 项通过。

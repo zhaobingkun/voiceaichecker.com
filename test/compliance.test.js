@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
 
 const requiredDisclosurePages = [
@@ -39,6 +40,44 @@ function getTagAttr(html, tagPattern, attrName) {
   const tag = html.match(tagPattern)?.[0] ?? "";
   const attr = tag.match(new RegExp(`${attrName}="([^"]+)"`));
   return attr?.[1] ?? "";
+}
+
+async function listPublicHtmlFiles(dir = "public") {
+  const entries = await readdir(new URL(`../${dir}/`, import.meta.url), { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const relativePath = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) {
+      files.push(...(await listPublicHtmlFiles(relativePath)));
+    } else if (entry.isFile() && entry.name.endsWith(".html")) {
+      files.push(relativePath);
+    }
+  }
+
+  return files.sort();
+}
+
+function isIgnoredHref(href) {
+  return (
+    href.startsWith("#") ||
+    href.startsWith("http://") ||
+    href.startsWith("https://") ||
+    href.startsWith("mailto:") ||
+    href.startsWith("/auth/") ||
+    href.startsWith("/api/")
+  );
+}
+
+function publicTargetExists(href) {
+  const cleanHref = href.split("#")[0].split("?")[0];
+  if (cleanHref === "/") {
+    return existsSync(new URL("../public/index.html", import.meta.url));
+  }
+  if (cleanHref.endsWith("/")) {
+    return existsSync(new URL(`../public${cleanHref}index.html`, import.meta.url));
+  }
+  return existsSync(new URL(`../public${cleanHref}`, import.meta.url));
 }
 
 test("customer-facing pages disclose the live detection provider and model", async () => {
@@ -122,5 +161,36 @@ test("robots and sitemap expose every public HTML page", async () => {
 
   for (const [, url] of publicHtmlPages) {
     assert.match(sitemap, new RegExp(`<loc>${url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</loc>`));
+  }
+});
+
+test("all public HTML files are represented in the SEO page registry", async () => {
+  const actualHtmlPages = await listPublicHtmlFiles();
+  const registeredPages = publicHtmlPages.map(([page]) => page).sort();
+  assert.deepEqual(actualHtmlPages, registeredPages);
+});
+
+test("homepage links to every sitemap page", async () => {
+  const homepage = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
+
+  for (const [, url] of publicHtmlPages) {
+    const path = new URL(url).pathname;
+    assert.match(homepage, new RegExp(`href="${path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+  }
+});
+
+test("internal static links resolve to existing public targets", async () => {
+  for (const page of await listPublicHtmlFiles()) {
+    const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
+    const hrefs = [...html.matchAll(/href="([^"]+)"/g)].map((match) => match[1]);
+
+    for (const href of hrefs) {
+      if (isIgnoredHref(href)) {
+        continue;
+      }
+
+      assert.ok(href.startsWith("/"), `${page} has a non-absolute internal href: ${href}`);
+      assert.ok(publicTargetExists(href), `${page} links to missing public target: ${href}`);
+    }
   }
 });
