@@ -50,3 +50,5 @@
 - 严格按正文区域统计（排除 header/footer/script/style）词数：`deepfake-audio-detector` 约 1284，`voice-clone-detector` 约 1254，`ai-audio-detector` 约 1292，`ai-voice-checker` 约 1230，`is-this-voice-ai` 约 1265，均满足 1000-1500 词目标。
 - 新增回归测试锁定这 5 个 SEO 落地页正文词数在 1000-1500 范围内；Node v24 执行 `--test test/*.test.js` 共 16 项通过。
 - 发布后下一步建议：在 GSC 对这 5 个 URL 分别点击“请求编入索引”，然后观察 1-3 周，不要频繁反复提交；若仍未索引，再继续拉开搜索意图或增加真实示例、截图、对比表、使用教程等差异化内容。
+- 用户反馈 GSC 报告多个页面发现 `https://voiceaichecker.com/cdn-cgi/l/email-protection` 和 `https://www.voiceaichecker.com/cdn-cgi/l/email-protection` 404。原因是 Cloudflare Email Address Obfuscation 会把公开 `mailto:` 邮箱链接改写成 `/cdn-cgi/l/email-protection`，Google 可能把该内部路径当链接抓取。
+- 处理方式：移除公开 HTML 中的 `mailto:` 链接，改为拆分渲染的可见客服邮箱文本；首页 footer 的 Support 链接改为 `/#customer-support`；`robots.txt` 增加 `Disallow: /cdn-cgi/`。新增回归测试禁止公开 HTML 再出现 `mailto:` 或 `/cdn-cgi/l/email-protection`。Node v24 执行 `--test test/*.test.js` 共 17 项通过。

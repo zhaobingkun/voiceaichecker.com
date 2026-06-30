@@ -121,7 +121,16 @@ test("strengthened SEO landing pages keep enough unique visible content", async 
 test("customer support email is visible on the homepage and billing pages", async () => {
   for (const page of ["public/index.html", "public/pricing/index.html", "public/refund-policy/index.html"]) {
     const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
-    assert.match(html, /mailto:bingkun\.zhao@gmail\.com/i, `${page} must show the support email`);
+    assert.match(html, /bingkun\.zhao/i, `${page} must show the support email username`);
+    assert.match(html, /gmail\.com/i, `${page} must show the support email domain`);
+  }
+});
+
+test("public pages do not expose crawler-hostile email protection links", async () => {
+  for (const page of await listPublicHtmlFiles()) {
+    const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
+    assert.doesNotMatch(html, /mailto:/i, `${page} should not use mailto links that Cloudflare rewrites`);
+    assert.doesNotMatch(html, /\/cdn-cgi\/l\/email-protection/i, `${page} should not link to Cloudflare email protection`);
   }
 });
 
@@ -185,6 +194,7 @@ test("robots and sitemap expose every public HTML page", async () => {
   const sitemap = await readFile(new URL("../public/sitemap.xml", import.meta.url), "utf8");
 
   assert.match(robots, /^User-agent: \*/m);
+  assert.match(robots, /^Disallow: \/cdn-cgi\/$/m);
   assert.match(robots, /^Allow: \/$/m);
   assert.match(robots, /^Sitemap: https:\/\/voiceaichecker\.com\/sitemap\.xml$/m);
   assert.match(sitemap, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
