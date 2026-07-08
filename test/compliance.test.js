@@ -134,6 +134,19 @@ test("public pages do not expose crawler-hostile email protection links", async 
   }
 });
 
+test("public pages include the JustSimple Tools badge without nofollow", async () => {
+  for (const page of await listPublicHtmlFiles()) {
+    const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
+    const badgeLink = html.match(/<a href="https:\/\/www\.justsimple\.tools"[^>]*>/)?.[0] ?? "";
+    const rel = badgeLink.match(/rel="([^"]+)"/)?.[1] ?? "";
+
+    assert.ok(badgeLink, `${page} must include the JustSimple Tools badge link`);
+    assert.match(html, /<img src="https:\/\/www\.justsimple\.tools\/badge\.svg" width="150" alt="Listed on JustSimple Tools" \/>/);
+    assert.equal(rel, "noopener noreferrer", `${page} badge rel should only include noopener noreferrer`);
+    assert.doesNotMatch(rel, /\bnofollow\b/i, `${page} badge link must not use nofollow`);
+  }
+});
+
 test("core SEO pages expose valid FAQPage structured data", async () => {
   for (const page of seoFaqPages) {
     const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");

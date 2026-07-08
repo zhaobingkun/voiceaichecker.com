@@ -867,12 +867,23 @@ dd {
 }
 
 .footer-links,
+.directory-badge,
 .share-links {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   justify-content: center;
+}
+
+.directory-badge {
+  width: 100%;
+}
+
+.directory-badge img {
+  display: block;
+  max-width: 150px;
+  height: auto;
 }
 
 .share-links {
