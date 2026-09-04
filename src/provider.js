@@ -1,5 +1,5 @@
 import https from "node:https";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 const clamp01 = (value) => Math.max(0, Math.min(1, Number(value)));
 
@@ -88,7 +88,16 @@ const mockDetect = ({ audioBuffer, filename, analyzeSeconds }) => {
   };
 };
 
-const postMultipart = ({ apiUrl, apiKey, body, contentType, redirects = 0 }) =>
+const postMultipart = ({
+  apiUrl,
+  apiKey,
+  body,
+  contentType,
+  timeoutMs,
+  requestId,
+  redirects = 0,
+  startedAt = Date.now()
+}) =>
   new Promise((resolve, reject) => {
     const target = new URL(apiUrl);
     const request = https.request(
@@ -99,6 +108,7 @@ const postMultipart = ({ apiUrl, apiKey, body, contentType, redirects = 0 }) =>
         path: `${target.pathname}${target.search}`,
         headers: {
           "X-API-Key": apiKey,
+          "X-Request-ID": requestId,
           "Content-Type": contentType,
           "Content-Length": String(body.length)
         }
@@ -115,7 +125,16 @@ const postMultipart = ({ apiUrl, apiKey, body, contentType, redirects = 0 }) =>
             redirects < 3
           ) {
             const nextUrl = new URL(response.headers.location, target).toString();
-            postMultipart({ apiUrl: nextUrl, apiKey, body, contentType, redirects: redirects + 1 })
+            postMultipart({
+              apiUrl: nextUrl,
+              apiKey,
+              body,
+              contentType,
+              timeoutMs,
+              requestId,
+              redirects: redirects + 1,
+              startedAt
+            })
               .then(resolve)
               .catch(reject);
             return;
@@ -133,12 +152,16 @@ const postMultipart = ({ apiUrl, apiKey, body, contentType, redirects = 0 }) =>
           resolve({
             ok: response.statusCode >= 200 && response.statusCode < 300,
             status: response.statusCode,
-            payload
+            payload,
+            durationMs: Date.now() - startedAt
           });
         });
       }
     );
 
+    request.setTimeout(timeoutMs, () => {
+      request.destroy(new Error(`Modulate request timed out after ${timeoutMs}ms`));
+    });
     request.on("error", reject);
     request.write(body);
     request.end();
@@ -150,7 +173,8 @@ export const detectVoice = async ({
   mimeType,
   analyzeSeconds,
   apiKey,
-  apiUrl
+  apiUrl,
+  timeoutMs = 25000
 }) => {
   if (!apiKey || !apiUrl) {
     return mockDetect({ audioBuffer, filename, analyzeSeconds });
@@ -170,12 +194,35 @@ export const detectVoice = async ({
   );
   const multipartFooter = Buffer.from(`\r\n--${boundary}--\r\n`);
   const multipartBody = Buffer.concat([multipartHeader, audioBuffer, multipartFooter]);
+  const requestId = randomUUID();
+  const startedAt = Date.now();
 
-  const response = await postMultipart({
-    apiUrl,
-    apiKey,
-    body: multipartBody,
-    contentType: `multipart/form-data; boundary=${boundary}`
+  let response;
+  try {
+    response = await postMultipart({
+      apiUrl,
+      apiKey,
+      body: multipartBody,
+      contentType: `multipart/form-data; boundary=${boundary}`,
+      timeoutMs,
+      requestId,
+      startedAt
+    });
+  } catch (error) {
+    console.error("Modulate detection request failed", {
+      requestId,
+      durationMs: Date.now() - startedAt,
+      message: error.message
+    });
+    error.statusCode = error.message.includes("timed out") ? 504 : 502;
+    throw error;
+  }
+
+  console.info("Modulate detection request completed", {
+    requestId,
+    status: response.status,
+    ok: response.ok,
+    durationMs: response.durationMs
   });
 
   const payload = response.payload;
@@ -189,12 +236,25 @@ export const detectVoice = async ({
       : "";
     const message =
       payload?.error || payload?.message || details || `Provider returned HTTP ${response.status}`;
-    throw new Error(message);
+    console.error("Modulate detection request returned an error", {
+      requestId,
+      status: response.status,
+      message
+    });
+    const error = new Error(message);
+    error.statusCode = response.status === 429 ? 503 : 502;
+    throw error;
   }
 
   const score = readProbability(payload);
   if (score === null) {
-    throw new Error("Provider response did not include a recognizable AI probability field.");
+    console.error("Modulate detection response was missing an AI probability", {
+      requestId,
+      status: response.status
+    });
+    const error = new Error("Provider response did not include a recognizable AI probability field.");
+    error.statusCode = 502;
+    throw error;
   }
 
   return {

@@ -2,7 +2,7 @@ import https from "node:https";
 
 import { config } from "./config.js";
 
-const requestJson = ({ method, url, headers = {}, body = null }) =>
+const requestJson = ({ method, url, headers = {}, body = null, timeoutMs = 10000 }) =>
   new Promise((resolve, reject) => {
     const target = new URL(url);
     const request = https.request(
@@ -36,6 +36,9 @@ const requestJson = ({ method, url, headers = {}, body = null }) =>
       }
     );
 
+    request.setTimeout(timeoutMs, () => {
+      request.destroy(new Error(`Supabase request timed out after ${timeoutMs}ms`));
+    });
     request.on("error", reject);
     if (body) request.write(body);
     request.end();
@@ -43,6 +46,67 @@ const requestJson = ({ method, url, headers = {}, body = null }) =>
 
 export const isSupabaseConfigured = () =>
   Boolean(config.supabaseUrl && config.supabaseServiceRoleKey);
+
+const callRpc = async ({ functionName, body }) => {
+  const serializedBody = JSON.stringify(body);
+  const response = await requestJson({
+    method: "POST",
+    url: `${config.supabaseUrl}/rest/v1/rpc/${functionName}`,
+    headers: {
+      apikey: config.supabaseServiceRoleKey,
+      Authorization: `Bearer ${config.supabaseServiceRoleKey}`,
+      "Content-Type": "application/json",
+      "Content-Length": String(Buffer.byteLength(serializedBody))
+    },
+    body: serializedBody
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      response.payload?.message ||
+        response.payload?.error ||
+        `Supabase RPC ${functionName} failed with HTTP ${response.status}`
+    );
+  }
+
+  return Array.isArray(response.payload) ? response.payload[0] || {} : response.payload || {};
+};
+
+export const consumeDetectionQuota = async ({ usageDate, identityKey, limit }) => {
+  if (!isSupabaseConfigured()) return null;
+
+  const result = await callRpc({
+    functionName: "consume_detection_quota",
+    body: {
+      p_usage_date: usageDate,
+      p_identity_key: identityKey,
+      p_limit: limit
+    }
+  });
+
+  return {
+    allowed: result.allowed === true,
+    usedCount: Number(result.used_count) || 0
+  };
+};
+
+export const getDetectionQuota = async ({ usageDate, identityKey, limit }) => {
+  if (!isSupabaseConfigured()) return null;
+
+  const result = await callRpc({
+    functionName: "get_detection_quota",
+    body: {
+      p_usage_date: usageDate,
+      p_identity_key: identityKey,
+      p_limit: limit
+    }
+  });
+
+  return {
+    usedCount: Number(result.used_count) || 0,
+    remainingCount: Math.max(0, Number(result.remaining_count) || 0)
+  };
+};
 
 export const upsertUser = async (user) => {
   if (!isSupabaseConfigured()) return { ok: false, skipped: true };

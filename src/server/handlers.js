@@ -11,7 +11,13 @@ import { trimWavBuffer } from "../audio.js";
 import { config, limits } from "../config.js";
 import { createProCheckout, isCreemConfigured, verifyCreemWebhookSignature } from "../creem.js";
 import { classifyScore, confidenceForScore, detectVoice } from "../provider.js";
-import { getUserSubscription, isSupabaseConfigured, upsertSubscription } from "../supabase.js";
+import {
+  consumeDetectionQuota,
+  getDetectionQuota,
+  getUserSubscription,
+  isSupabaseConfigured,
+  upsertSubscription
+} from "../supabase.js";
 
 const cache = globalThis.__avdCache || new Map();
 const usage = globalThis.__avdUsage || new Map();
@@ -81,6 +87,8 @@ const usageKeyForRequest = async (req) => {
 
 const remainingForKey = (key, limit) => Math.max(0, limit - (usage.get(key) || 0));
 
+const remainingForQuota = ({ usedCount, limit }) => Math.max(0, limit - usedCount);
+
 const useQuota = (key, limit) => {
   const used = usage.get(key) || 0;
   if (used >= limit) return false;
@@ -88,9 +96,74 @@ const useQuota = (key, limit) => {
   return true;
 };
 
+const reserveQuota = async (quota) => {
+  const persisted = await consumeDetectionQuota({
+    usageDate: todayKey(),
+    identityKey: quota.key,
+    limit: quota.limit
+  });
+
+  if (persisted) return persisted;
+
+  return {
+    allowed: useQuota(quota.key, quota.limit),
+    usedCount: usage.get(quota.key) || 0
+  };
+};
+
+const readQuota = async (quota) => {
+  const persisted = await getDetectionQuota({
+    usageDate: todayKey(),
+    identityKey: quota.key,
+    limit: quota.limit
+  });
+
+  if (persisted) return persisted;
+
+  return {
+    usedCount: usage.get(quota.key) || 0,
+    remainingCount: remainingForKey(quota.key, quota.limit)
+  };
+};
+
+const getCachedDetection = (cacheKey) => {
+  const entry = cache.get(cacheKey);
+  if (!entry) return null;
+
+  if (entry.expiresAt <= Date.now()) {
+    cache.delete(cacheKey);
+    return null;
+  }
+
+  cache.delete(cacheKey);
+  cache.set(cacheKey, entry);
+  return entry.value;
+};
+
+const setCachedDetection = (cacheKey, value) => {
+  cache.set(cacheKey, { value, expiresAt: Date.now() + config.cacheTtlSeconds * 1000 });
+
+  while (cache.size > config.cacheMaxEntries) {
+    cache.delete(cache.keys().next().value);
+  }
+};
+
 export const handleDetect = async (req, res) => {
   const quota = await usageKeyForRequest(req);
-  if (!useQuota(quota.key, quota.limit)) {
+  let quotaState;
+
+  try {
+    quotaState = await reserveQuota(quota);
+  } catch (error) {
+    console.error("Detection quota service failed", {
+      message: error.message,
+      identityType: quota.user ? "user" : "ip"
+    });
+    sendJson(res, 503, { error: "Detection quota is temporarily unavailable. Please try again shortly." });
+    return;
+  }
+
+  if (!quotaState.allowed) {
     sendJson(res, 429, {
       error: quota.user
         ? "Daily account limit reached. Try again tomorrow."
@@ -103,8 +176,11 @@ export const handleDetect = async (req, res) => {
   const audioBase64 = String(body.audioBase64 || "").replace(/^data:[^,]+,/, "");
   const filename = String(body.filename || "audio-upload").slice(0, 160);
   const mimeType = String(body.mimeType || "application/octet-stream").toLowerCase();
-  const requestedSeconds = Math.trunc(Number(body.analyzeSeconds) || config.maxAnalyzeSeconds);
-  const analyzeSeconds = Math.max(1, Math.min(config.maxAnalyzeSeconds, requestedSeconds));
+  const maxAnalyzeSeconds = quota.user
+    ? config.maxAnalyzeSeconds
+    : Math.min(config.maxAnalyzeSeconds, config.anonymousMaxAnalyzeSeconds);
+  const requestedSeconds = Math.trunc(Number(body.analyzeSeconds) || maxAnalyzeSeconds);
+  const analyzeSeconds = Math.max(1, Math.min(maxAnalyzeSeconds, requestedSeconds));
 
   if (!audioBase64) throw new Error("Missing audio file.");
   if (!allowedAudioTypes.has(mimeType)) {
@@ -124,7 +200,7 @@ export const handleDetect = async (req, res) => {
 
   const fileHash = createHash("sha256").update(trimmedAudio.buffer).digest("hex");
   const cacheKey = `${fileHash}:${analyzeSeconds}`;
-  const cached = cache.get(cacheKey);
+  const cached = getCachedDetection(cacheKey);
 
   if (cached) {
     sendJson(res, 200, {
@@ -133,7 +209,7 @@ export const handleDetect = async (req, res) => {
       user: quota.user,
       subscription: quota.subscription,
       isPro: quota.isPro,
-      remainingDailyDetections: remainingForKey(quota.key, quota.limit)
+      remainingDailyDetections: remainingForQuota({ usedCount: quotaState.usedCount, limit: quota.limit })
     });
     return;
   }
@@ -144,7 +220,8 @@ export const handleDetect = async (req, res) => {
     mimeType: "audio/wav",
     analyzeSeconds,
     apiKey: config.modulateApiKey,
-    apiUrl: config.modulateApiUrl
+    apiUrl: config.modulateApiUrl,
+    timeoutMs: config.modulateRequestTimeoutMs
   });
 
   const aiProbability = detection.aiProbability;
@@ -164,13 +241,13 @@ export const handleDetect = async (req, res) => {
           : "Detection is probabilistic and should be reviewed with context."
   };
 
-  cache.set(cacheKey, result);
+  setCachedDetection(cacheKey, result);
   sendJson(res, 200, {
     ...result,
     user: quota.user,
     subscription: quota.subscription,
     isPro: quota.isPro,
-    remainingDailyDetections: remainingForKey(quota.key, quota.limit)
+    remainingDailyDetections: remainingForQuota({ usedCount: quotaState.usedCount, limit: quota.limit })
   });
 };
 
@@ -329,13 +406,27 @@ export const handleCreemWebhook = async (req, res) => {
 
 export const handleMe = async (req, res) => {
   const quota = await usageKeyForRequest(req);
+  let quotaState;
+
+  try {
+    quotaState = await readQuota(quota);
+  } catch (error) {
+    console.error("Detection quota lookup failed", {
+      message: error.message,
+      identityType: quota.user ? "user" : "ip"
+    });
+    sendJson(res, 503, { error: "Detection quota is temporarily unavailable. Please try again shortly." });
+    return;
+  }
+
   sendJson(res, 200, {
     authConfigured: isGoogleAuthConfigured(),
     user: quota.user,
     subscription: quota.subscription,
     isPro: quota.isPro,
     dailyLimit: quota.limit,
-    remainingDailyDetections: remainingForKey(quota.key, quota.limit)
+    maxAnalyzeSeconds: quota.user ? config.maxAnalyzeSeconds : Math.min(config.maxAnalyzeSeconds, config.anonymousMaxAnalyzeSeconds),
+    remainingDailyDetections: quotaState.remainingCount
   });
 };
 
@@ -345,9 +436,12 @@ export const handleHealth = (res) => {
     providerConfigured: Boolean(config.modulateApiKey && config.modulateApiUrl),
     authConfigured: isGoogleAuthConfigured(),
     supabaseConfigured: isSupabaseConfigured(),
+    quotaBackend: isSupabaseConfigured() ? "supabase" : "memory",
     creemConfigured: isCreemConfigured(),
     maxFileMb: config.maxFileMb,
     maxAnalyzeSeconds: config.maxAnalyzeSeconds,
+    anonymousMaxAnalyzeSeconds: config.anonymousMaxAnalyzeSeconds,
+    modulateRequestTimeoutMs: config.modulateRequestTimeoutMs,
     dailyIpLimit: config.dailyIpLimit,
     authenticatedDailyLimit: config.authenticatedDailyLimit,
     proDailyLimit: config.proDailyLimit

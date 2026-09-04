@@ -77,6 +77,10 @@ export const config = {
   creemProProductId: process.env.CREEM_PRO_PRODUCT_ID || "prod_12r7OKEp2EKXmH8Hsyz5oN",
   maxFileMb: toNumber(process.env.MAX_FILE_MB, 10),
   maxAnalyzeSeconds: Math.trunc(toNumber(process.env.MAX_ANALYZE_SECONDS, 30)),
+  modulateRequestTimeoutMs: Math.trunc(toNumber(process.env.MODULATE_REQUEST_TIMEOUT_MS, 25000)),
+  cacheTtlSeconds: Math.trunc(toNumber(process.env.DETECTION_CACHE_TTL_SECONDS, 3600)),
+  cacheMaxEntries: Math.trunc(toNumber(process.env.DETECTION_CACHE_MAX_ENTRIES, 1000)),
+  anonymousMaxAnalyzeSeconds: Math.trunc(toNumber(process.env.ANONYMOUS_MAX_ANALYZE_SECONDS, 15)),
   dailyIpLimit: Math.trunc(toNumber(process.env.DAILY_IP_LIMIT, 3)),
   authenticatedDailyLimit: Math.trunc(toNumber(process.env.AUTH_DAILY_LIMIT, 10)),
   proDailyLimit: Math.trunc(toNumber(process.env.PRO_DAILY_LIMIT, 20))

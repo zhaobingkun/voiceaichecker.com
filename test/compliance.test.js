@@ -141,7 +141,7 @@ test("public pages include the JustSimple Tools badge without nofollow", async (
     const rel = badgeLink.match(/rel="([^"]+)"/)?.[1] ?? "";
 
     assert.ok(badgeLink, `${page} must include the JustSimple Tools badge link`);
-    assert.match(html, /<img src="https:\/\/www\.justsimple\.tools\/badge\.svg" width="150" alt="Listed on JustSimple Tools" \/>/);
+    assert.match(html, /<img src="https:\/\/www\.justsimple\.tools\/badge\.svg" width="150" height="40" alt="Listed on JustSimple Tools" \/>/);
     assert.equal(rel, "noopener noreferrer", `${page} badge rel should only include noopener noreferrer`);
     assert.doesNotMatch(rel, /\bnofollow\b/i, `${page} badge link must not use nofollow`);
   }

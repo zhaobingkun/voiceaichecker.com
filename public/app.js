@@ -77,6 +77,16 @@ const renderAccount = (state) => {
   const limit = state?.dailyLimit ?? "--";
   quotaChip.textContent = state?.isPro ? `${remaining}/${limit} Pro checks left` : `${remaining}/${limit} free checks left`;
 
+  const maxAnalyzeSeconds = Number(state?.maxAnalyzeSeconds);
+  if (secondsInput && Number.isFinite(maxAnalyzeSeconds) && maxAnalyzeSeconds > 0) {
+    secondsInput.max = String(maxAnalyzeSeconds);
+    if (Number(secondsInput.value) > maxAnalyzeSeconds) secondsInput.value = String(maxAnalyzeSeconds);
+    if (secondsOutput) secondsOutput.textContent = `${secondsInput.value}s`;
+    for (const label of document.querySelectorAll(".trust-row span")) {
+      if (/\d+\s*sec max/i.test(label.textContent)) label.textContent = `${maxAnalyzeSeconds} sec max`;
+    }
+  }
+
   if (!state?.authConfigured) {
     loginLink.classList.add("is-disabled");
     loginLink.setAttribute("aria-disabled", "true");

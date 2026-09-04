@@ -8,6 +8,7 @@ export default async function handler(req, res) {
     }
     await handleDetect(req, res);
   } catch (error) {
-    sendJson(res, 400, { error: error.message || "Request failed" });
+    const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 400;
+    sendJson(res, statusCode, { error: error.message || "Request failed" });
   }
 }
