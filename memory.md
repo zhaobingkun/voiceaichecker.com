@@ -98,3 +98,7 @@
 - 已修正 `supabase-schema.sql`，将更新语句改为使用 `daily_detection_usage as d` 并限定 `d.used_count`；新增 `supabase-fix-quota.sql` 作为已有生产数据库的一次性修复脚本。
 - 已将修正版函数执行到 Supabase 生产数据库；事务测试返回 `allowed=true, used_count=1` 与 `allowed=false, used_count=1`，随后回滚，未写入诊断数据，也未上传音频或消耗 Modulate credits。
 - 修复后重新打开生产首页，登录态仍显示 `10/10 free checks left`，检测按钮在无音频时保持正确禁用状态；未自动点击真实 Detect，避免无授权消耗用户的 Modulate 额度。下一步由用户刷新页面并用现有音频重试一次真实检测。
+- 用户重试后页面显示浏览器原生 `Failed to fetch`，且等待时间较长。Vercel Production Logs 记录同一时段两次 `POST /api/detect` 均返回 HTTP 200，Modulate 请求分别耗时 176ms 和 179ms，说明配额、服务端及供应商调用已经成功，问题发生在浏览器上传或响应连接阶段。
+- 根因是浏览器此前把前 30 秒解码后按原始 44.1/48kHz 生成单声道 PCM16 WAV，再放入 Base64 JSON；48kHz 的 30 秒样本约 2.88MB，Base64 后约 3.84MB，远大于用户原始压缩视频，弱网络或代理下容易变慢、断连。
+- 已将浏览器检测样本统一降采样为最高 16kHz 单声道 PCM16 WAV：30 秒样本约 960KB，Base64 后约 1.28MB；同时增加 32 秒网络超时、断连/非 JSON 响应的可理解错误提示，并给首页脚本增加版本参数避免旧缓存继续运行。
+- 新增音频预处理回归测试，验证 48kHz 立体声 30 秒输出为 16kHz 单声道且小于 1MB，并验证低采样率音频不会被上采样；完整 `npm test` 共 23 项通过，`node --check` 与 `git diff --check` 均通过。

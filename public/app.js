@@ -1,3 +1,5 @@
+import { encodePcm16Wav } from "/audio-processing.js";
+
 const fileInput = document.querySelector("#file-input");
 const dropZone = document.querySelector("#drop-zone");
 const uploadTab = document.querySelector("#upload-tab");
@@ -239,47 +241,6 @@ const fileToBase64 = (file) =>
     reader.readAsDataURL(file);
   });
 
-const encodePcm16Wav = (audioBuffer, seconds) => {
-  const sampleRate = audioBuffer.sampleRate;
-  const frameCount = Math.min(audioBuffer.length, Math.floor(sampleRate * seconds));
-  const wavBuffer = new ArrayBuffer(44 + frameCount * 2);
-  const view = new DataView(wavBuffer);
-
-  const writeString = (offset, value) => {
-    for (let i = 0; i < value.length; i += 1) {
-      view.setUint8(offset + i, value.charCodeAt(i));
-    }
-  };
-
-  writeString(0, "RIFF");
-  view.setUint32(4, 36 + frameCount * 2, true);
-  writeString(8, "WAVE");
-  writeString(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  writeString(36, "data");
-  view.setUint32(40, frameCount * 2, true);
-
-  const channels = Array.from({ length: audioBuffer.numberOfChannels }, (_, index) =>
-    audioBuffer.getChannelData(index)
-  );
-
-  let offset = 44;
-  for (let frame = 0; frame < frameCount; frame += 1) {
-    const mixed = channels.reduce((sum, channel) => sum + (channel[frame] || 0), 0) / channels.length;
-    const clamped = Math.max(-1, Math.min(1, mixed));
-    view.setInt16(offset, clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff, true);
-    offset += 2;
-  }
-
-  return wavBuffer;
-};
-
 const prepareAudioForDetection = async (file, seconds) => {
   const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextCtor) {
@@ -327,22 +288,38 @@ const detectSelectedFile = async () => {
   if (!selectedFile) return;
   detectButton.disabled = true;
   setStatus(`Preparing first ${secondsInput.value} seconds...`);
+  let timeout;
 
   try {
     const uploadFile = await prepareAudioForDetection(selectedFile, Number(secondsInput.value));
-    setStatus("Analyzing audio...");
-    const response = await fetch("/api/detect", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        audioBase64: await fileToBase64(uploadFile),
-        filename: uploadFile.name,
-        mimeType: uploadFile.type,
-        analyzeSeconds: Number(secondsInput.value)
-      })
-    });
+    setStatus(`Uploading ${formatBytes(uploadFile.size)} voice sample...`);
+    const controller = new AbortController();
+    timeout = window.setTimeout(() => controller.abort(), 32000);
+    let response;
 
-    const payload = await response.json();
+    try {
+      response = await fetch("/api/detect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          audioBase64: await fileToBase64(uploadFile),
+          filename: uploadFile.name,
+          mimeType: uploadFile.type,
+          analyzeSeconds: Number(secondsInput.value)
+        }),
+        signal: controller.signal
+      });
+    } catch (error) {
+      if (error.name === "AbortError") {
+        throw new Error("Detection timed out. Try a shorter 10-15 second window.");
+      }
+      throw new Error("The network connection ended before the result arrived. Please refresh and try a shorter window.");
+    }
+
+    const responseType = response.headers.get("content-type") || "";
+    const payload = responseType.includes("application/json")
+      ? await response.json()
+      : { error: `Detection service returned HTTP ${response.status}.` };
     if (!response.ok) throw new Error(payload.error || "Detection failed.");
 
     showResult(payload);
@@ -356,6 +333,7 @@ const detectSelectedFile = async () => {
   } catch (error) {
     setStatus(error.message || "Detection failed.", true);
   } finally {
+    if (timeout) window.clearTimeout(timeout);
     detectButton.disabled = false;
   }
 };
