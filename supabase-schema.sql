@@ -119,12 +119,12 @@ begin
   values (p_usage_date, p_identity_key)
   on conflict (usage_date, identity_key) do nothing;
 
-  update public.daily_detection_usage
-  set used_count = used_count + 1
-  where usage_date = p_usage_date
-    and identity_key = p_identity_key
-    and used_count < p_limit
-  returning daily_detection_usage.used_count into next_count;
+  update public.daily_detection_usage as d
+  set used_count = d.used_count + 1
+  where d.usage_date = p_usage_date
+    and d.identity_key = p_identity_key
+    and d.used_count < p_limit
+  returning d.used_count into next_count;
 
   if next_count is not null then
     return query select true, next_count;

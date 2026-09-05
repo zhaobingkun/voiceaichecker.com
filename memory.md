@@ -90,3 +90,11 @@
 - 已根据 GSC 机会更新 6 个重点落地页的 Title、Meta、OG/Twitter 描述，并在首页补充指向 Deepfake Audio Detector 和 AI Audio Detector 的上下文内链；新增 `test/detection.test.js`。完整 Node v24 测试共 21 项通过，`git diff --check` 通过。当前未部署到 Vercel，也未执行 Supabase 外部迁移。
 - 用户已在 Supabase SQL Editor 执行 `supabase-schema.sql` 追加的配额表和 RPC；随后已将增长准备改动提交为 `4f9a91a Prepare voice checker for growing traffic` 并推送到 GitHub `main`，Vercel 生产部署显示 Ready。
 - 生产冒烟验证：`https://voiceaichecker.com/` 可访问，线上标题为 `AI Voice Detector Free Online | Voice AI Checker`，首页显示 3 次免费检查和 30 秒上限，新增的 AI Audio / Deepfake Audio 内链均可见。未上传音频，未额外消耗 Modulate credits。浏览器对直接打开 API 路径存在客户端拦截/超时，因此 `/api/health` 和 `/api/me` 未能通过地址栏完成读取；需后续从 Vercel Logs 或站内请求继续观察真实运行状态。
+
+## 2026-09-05
+
+- 用户反馈登录后仍无法检测，截图显示已正确读取 `10/10 free checks left`，但点击 Detect voice 后返回 `Detection quota is temporarily unavailable`。
+- 已在 Supabase SQL Editor 复现真实数据库错误：`consume_detection_quota` 中 `used_count` 与 `RETURNS TABLE (allowed boolean, used_count integer)` 生成的 PL/pgSQL 输出变量同名，UPDATE 中未限定表别名导致 `ERROR 42702: column reference "used_count" is ambiguous`。因此读取配额正常，但预扣减失败。
+- 已修正 `supabase-schema.sql`，将更新语句改为使用 `daily_detection_usage as d` 并限定 `d.used_count`；新增 `supabase-fix-quota.sql` 作为已有生产数据库的一次性修复脚本。
+- 已将修正版函数执行到 Supabase 生产数据库；事务测试返回 `allowed=true, used_count=1` 与 `allowed=false, used_count=1`，随后回滚，未写入诊断数据，也未上传音频或消耗 Modulate credits。
+- 修复后重新打开生产首页，登录态仍显示 `10/10 free checks left`，检测按钮在无音频时保持正确禁用状态；未自动点击真实 Detect，避免无授权消耗用户的 Modulate 额度。下一步由用户刷新页面并用现有音频重试一次真实检测。
