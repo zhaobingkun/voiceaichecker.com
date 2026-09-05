@@ -102,3 +102,4 @@
 - 根因是浏览器此前把前 30 秒解码后按原始 44.1/48kHz 生成单声道 PCM16 WAV，再放入 Base64 JSON；48kHz 的 30 秒样本约 2.88MB，Base64 后约 3.84MB，远大于用户原始压缩视频，弱网络或代理下容易变慢、断连。
 - 已将浏览器检测样本统一降采样为最高 16kHz 单声道 PCM16 WAV：30 秒样本约 960KB，Base64 后约 1.28MB；同时增加 32 秒网络超时、断连/非 JSON 响应的可理解错误提示，并给首页脚本增加版本参数避免旧缓存继续运行。
 - 新增音频预处理回归测试，验证 48kHz 立体声 30 秒输出为 16kHz 单声道且小于 1MB，并验证低采样率音频不会被上采样；完整 `npm test` 共 23 项通过，`node --check` 与 `git diff --check` 均通过。
+- 网络与性能修复已提交为 `d493dd1 Reduce voice upload size and handle network failures` 并推送 `main`。Vercel Production Deployment 显示该提交为 Ready；生产首页已确认加载 `/app.js?v=20260905-network-fix`，线上 `/audio-processing.js` 内容已确认使用 `VOICE_SAMPLE_RATE = 16000`。未代替用户上传真实音频，因此没有额外消耗检测积分。
