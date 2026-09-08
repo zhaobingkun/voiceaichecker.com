@@ -29,6 +29,17 @@ const strengthenedSeoPages = [
   "public/is-this-voice-ai/index.html"
 ];
 
+const supportGuidePages = [
+  "public/how-to-detect-ai-voice/index.html",
+  "public/signs-of-ai-generated-voice/index.html",
+  "public/how-to-detect-cloned-voice/index.html",
+  "public/ai-voice-detection-accuracy/index.html",
+  "public/ai-voice-detection-privacy/index.html",
+  "public/ai-voice-scam-calls/index.html"
+];
+
+seoFaqPages.push(...supportGuidePages);
+
 const publicHtmlPages = [
   ["public/index.html", "https://voiceaichecker.com/"],
   ["public/free-ai-voice-detector/index.html", "https://voiceaichecker.com/free-ai-voice-detector/"],
@@ -38,6 +49,12 @@ const publicHtmlPages = [
   ["public/ai-voice-checker/index.html", "https://voiceaichecker.com/ai-voice-checker/"],
   ["public/voice-ai-checker/index.html", "https://voiceaichecker.com/voice-ai-checker/"],
   ["public/is-this-voice-ai/index.html", "https://voiceaichecker.com/is-this-voice-ai/"],
+  ["public/how-to-detect-ai-voice/index.html", "https://voiceaichecker.com/how-to-detect-ai-voice/"],
+  ["public/signs-of-ai-generated-voice/index.html", "https://voiceaichecker.com/signs-of-ai-generated-voice/"],
+  ["public/how-to-detect-cloned-voice/index.html", "https://voiceaichecker.com/how-to-detect-cloned-voice/"],
+  ["public/ai-voice-detection-accuracy/index.html", "https://voiceaichecker.com/ai-voice-detection-accuracy/"],
+  ["public/ai-voice-detection-privacy/index.html", "https://voiceaichecker.com/ai-voice-detection-privacy/"],
+  ["public/ai-voice-scam-calls/index.html", "https://voiceaichecker.com/ai-voice-scam-calls/"],
   ["public/pricing/index.html", "https://voiceaichecker.com/pricing/"],
   ["public/privacy/index.html", "https://voiceaichecker.com/privacy/"],
   ["public/terms/index.html", "https://voiceaichecker.com/terms/"],
@@ -115,6 +132,22 @@ test("strengthened SEO landing pages keep enough unique visible content", async 
 
     assert.ok(wordCount >= 1000, `${page} should keep at least 1000 visible body words, got ${wordCount}`);
     assert.ok(wordCount <= 1500, `${page} should stay focused under 1500 visible body words, got ${wordCount}`);
+  }
+});
+
+test("support guides keep substantial focused content and Article schema", async () => {
+  for (const page of supportGuidePages) {
+    const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
+    const wordCount = visibleBodyWordCount(html);
+    const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+    const articleNode = blocks
+      .map((match) => JSON.parse(match[1]))
+      .flatMap((data) => (Array.isArray(data["@graph"]) ? data["@graph"] : [data]))
+      .find((node) => node["@type"] === "Article");
+
+    assert.ok(wordCount >= 650, `${page} should keep at least 650 visible body words, got ${wordCount}`);
+    assert.ok(wordCount <= 1200, `${page} should stay focused under 1200 visible body words, got ${wordCount}`);
+    assert.ok(articleNode, `${page} must include Article structured data`);
   }
 });
 

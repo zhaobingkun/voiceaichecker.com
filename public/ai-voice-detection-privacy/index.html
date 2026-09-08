@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Voice Detection Privacy: What Happens to Audio</title>
+    <meta name="description" content="Learn how Voice AI Checker processes audio, what leaves your browser, when Modulate receives a sample, and when not to upload sensitive speech." />
+    <link rel="canonical" href="https://voiceaichecker.com/ai-voice-detection-privacy/" />
+    <meta property="og:title" content="AI Voice Detection Privacy: What Happens to Audio" />
+    <meta property="og:description" content="Learn how Voice AI Checker processes audio, what leaves your browser, when Modulate receives a sample, and when not to upload sensitive speech." />
+    <meta property="og:url" content="https://voiceaichecker.com/ai-voice-detection-privacy/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:image" content="https://voiceaichecker.com/assets/voice-detection-hero.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AI Voice Detection Privacy: What Happens to Audio" />
+    <meta name="twitter:description" content="Learn how Voice AI Checker processes audio, what leaves your browser, when Modulate receives a sample, and when not to upload sensitive speech." />
+    <meta name="twitter:image" content="https://voiceaichecker.com/assets/voice-detection-hero.webp" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css?v=20260909-guides" />
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Article",
+      "headline": "AI Voice Detection Privacy",
+      "description": "Learn how Voice AI Checker processes audio, what leaves your browser, when Modulate receives a sample, and when not to upload sensitive speech.",
+      "dateModified": "2026-09-09",
+      "mainEntityOfPage": "https://voiceaichecker.com/ai-voice-detection-privacy/",
+      "author": {
+        "@type": "Organization",
+        "name": "Voice AI Checker"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://voiceaichecker.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "AI Voice Detection Privacy",
+          "item": "https://voiceaichecker.com/ai-voice-detection-privacy/"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does the detector upload my whole file?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The browser prepares the selected analysis sample, limited to 30 seconds, before sending a WAV to the server."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is the audio sent to another company?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Live online detection sends the short sample to Modulate's Velma-2 Synthetic Voice Detection API."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does this site store uploaded audio?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The site does not intentionally retain uploaded audio after the request completes. Review the privacy policy and Modulate's applicable terms for the full processing context."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I use the detector without Google login?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Basic daily checks are available without login; signing in raises the free daily limit and adds account data processing."
+          }
+        }
+      ]
+    }
+  ]
+}
+    </script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar guide-topbar">
+        <a class="brand-link" href="/" aria-label="AI Voice Detector home"><img class="brand-icon" src="/favicon.svg" width="34" height="34" alt="" /><span>AI Voice Detector</span></a>
+        <nav class="main-nav guide-nav" aria-label="Primary"><a href="/">Detector</a><a href="/how-to-detect-ai-voice/">Method</a><a href="/signs-of-ai-generated-voice/">Signs</a><a href="/how-to-detect-cloned-voice/">Voice cloning</a><a href="/ai-voice-detection-accuracy/">Accuracy</a><a href="/ai-voice-detection-privacy/">Privacy</a><a href="/ai-voice-scam-calls/">Scam calls</a></nav>
+      </header>
+      <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span>AI Voice Detection Privacy</span></nav>
+
+      <section class="guide-hero">
+        <div class="guide-hero-copy">
+          <p class="eyebrow">Privacy guide</p>
+          <h1>AI Voice Detection Privacy</h1>
+          <p class="summary">Know the data path before uploading. The browser prepares a short sample, the server validates it, and Modulate processes it for synthetic voice detection.</p>
+          <a class="hero-action" href="/privacy/">Read the full privacy policy</a>
+        </div>
+        <figure class="guide-visual"><img src="/assets/voice-detection-hero.webp" width="1200" height="675" alt="Short audio sample moving through an AI voice detection workflow" /></figure>
+      </section>
+
+      <section class="content-section guide-answer">
+        <h2>Direct answer</h2>
+        <p class="answer">Voice AI Checker sends a processed WAV sample of up to 30 seconds to its server and then to Modulate&#x27;s Velma-2 API. The site does not intentionally retain uploaded audio after the request, but users should not upload confidential or legally sensitive recordings without authorization and comfort with third-party processing.</p>
+      </section>
+
+      <section class="content-section">
+        <h2>What leaves the browser</h2>
+        <p class="answer">When you choose a supported audio or video file, the browser decodes the selected speech and prepares a mono PCM WAV sample at no more than 16 kHz. The analysis control limits the selected window to a maximum of 30 seconds. This reduces upload size and sends only the analysis sample rather than requiring the detector to process an entire long recording.</p>
+        <p class="answer">The prepared WAV is encoded for the detection request and sent to the site&#x27;s server. The server validates the format and size, trims the sample again to the selected limit, and rejects unsupported or oversized input. Audio detection cannot happen entirely offline because the live model is reached through the server.</p>
+      </section>
+      <section class="content-section">
+        <h2>Third-party model processing</h2>
+        <p class="answer">Online detection is provided through Modulate&#x27;s Velma-2 Synthetic Voice Detection API. The short audio sample is sent to Modulate for analysis, so Modulate&#x27;s data-processing terms may apply in addition to this site&#x27;s privacy policy. If the result identifies the provider as Mock, the app is in demonstration mode and Velma-2 did not produce that result.</p>
+        <p class="answer">The site does not intentionally save the uploaded audio file after the request completes. Detection results may be temporarily reused through a bounded server cache keyed by a file hash, which avoids repeated provider calls for the same sample. The cache stores the result rather than a copy of the audio file.</p>
+      </section>
+      <section class="content-section">
+        <h2>Audio you should not upload</h2>
+        <p class="answer">Do not upload confidential meetings, protected health information, legal communications, private customer calls, security codes, intimate recordings, or children&#x27;s voices unless you have a lawful basis and permission to process them. Trimming to the suspicious sentence can reduce exposure, but it does not remove the need for consent or organizational policy review.</p>
+        <p class="answer">If a sensitive case must be investigated, start with non-audio evidence: sender details, timestamps, account history, payment instructions, or a trusted callback. An employer, school, newsroom, or regulated organization should use its approved incident process and vendor review rather than treating a public web tool as a private forensic system.</p>
+      </section>
+      <section class="content-section">
+        <h2>Practical privacy controls</h2>
+        <p class="answer">Use the shortest clean segment that answers the question. Remove unrelated conversation before upload, avoid including names or account numbers when they are not needed, and keep the original evidence in an approved location. Do not share the public result as proof about a person; it describes the selected sample only.</p>
+        <p class="answer">Signing in with Google raises the free daily quota and provides account identity information described in the privacy policy. Basic checks can be used without login. Before using the service for repeated organizational work, review the full privacy policy, the provider disclosure, and any retention or consent requirements that apply to your jurisdiction and role.</p>
+      </section>
+
+      <section class="content-section">
+        <h2>Privacy decision checklist</h2>
+        <div class="content-grid guide-card-grid">
+          <article class="info-card"><h3>Minimize</h3><p>Use only the shortest clean segment needed for the review.</p></article>
+          <article class="info-card"><h3>Authorize</h3><p>Confirm you have permission and a lawful basis to process it.</p></article>
+          <article class="info-card"><h3>Understand</h3><p>The live sample is processed by Modulate Velma-2.</p></article>
+          <article class="info-card"><h3>Escalate</h3><p>Use an approved forensic workflow for sensitive investigations.</p></article>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>Related voice detection guides</h2>
+        <div class="related-grid guide-related-grid">
+          <a class="related-card" href="/"><strong>AI Voice Detector</strong><span>Run the main detector on a clear voice sample.</span></a>
+          <a class="related-card" href="/voice-clone-detector/"><strong>Voice Clone Detector</strong><span>Screen a clip that may imitate a real person.</span></a>
+          <a class="related-card" href="/ai-voice-detection-accuracy/"><strong>Detection Accuracy</strong><span>Understand score bands and failure modes.</span></a>
+          <a class="related-card" href="/ai-voice-detection-privacy/"><strong>Detection Privacy</strong><span>Review the audio processing path before upload.</span></a>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>AI Voice Detection Privacy FAQ</h2>
+        <div class="faq-grid">
+          <article class="faq-item"><h3>Does the detector upload my whole file?</h3><p>The browser prepares the selected analysis sample, limited to 30 seconds, before sending a WAV to the server.</p></article>
+          <article class="faq-item"><h3>Is the audio sent to another company?</h3><p>Yes. Live online detection sends the short sample to Modulate&#x27;s Velma-2 Synthetic Voice Detection API.</p></article>
+          <article class="faq-item"><h3>Does this site store uploaded audio?</h3><p>The site does not intentionally retain uploaded audio after the request completes. Review the privacy policy and Modulate&#x27;s applicable terms for the full processing context.</p></article>
+          <article class="faq-item"><h3>Can I use the detector without Google login?</h3><p>Yes. Basic daily checks are available without login; signing in raises the free daily limit and adds account data processing.</p></article>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <div class="footer-links"><a href="/">AI Voice Detector</a><a href="/free-ai-voice-detector/">Free Detector</a><a href="/voice-clone-detector/">Clone Detector</a><a href="/pricing/">Pricing</a><a href="/privacy/">Privacy Policy</a><a href="/terms/">Terms</a></div>
+        <div class="directory-badge"><a href="https://www.justsimple.tools" target="_blank" rel="noopener noreferrer"><img src="https://www.justsimple.tools/badge.svg" width="150" height="40" alt="Listed on JustSimple Tools" /></a></div>
+      </footer>
+    </main>
+    <script src="/analytics.js" defer></script>
+  </body>
+</html>

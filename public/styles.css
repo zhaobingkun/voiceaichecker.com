@@ -960,6 +960,58 @@ dd {
   line-height: 1.7;
 }
 
+.guide-topbar {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.guide-nav {
+  grid-column: 2;
+  justify-content: flex-end;
+}
+
+.guide-hero {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.9fr) minmax(420px, 1.1fr);
+  gap: 32px;
+  align-items: center;
+  padding: 46px 0 24px;
+}
+
+.guide-hero h1 {
+  max-width: 720px;
+  font-size: clamp(2.8rem, 5vw, 4.6rem);
+}
+
+.guide-visual {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.guide-visual img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.guide-answer {
+  padding-top: 30px;
+  border-bottom: 1px solid var(--line);
+}
+
+.guide-card-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.guide-related-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .content-grid,
 .related-grid,
 .faq-grid {
@@ -1086,8 +1138,22 @@ dd {
   .result-grid,
   .content-grid,
   .related-grid,
-  .faq-grid {
+  .faq-grid,
+  .guide-hero,
+  .guide-card-grid,
+  .guide-related-grid {
     grid-template-columns: 1fr;
+  }
+
+  .guide-topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .main-nav.guide-nav {
+    grid-column: 1;
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow: visible;
   }
 
   .tool-grid {

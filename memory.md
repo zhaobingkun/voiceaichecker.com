@@ -1,5 +1,12 @@
 # 项目经验记录
 
+## 2026-09-09
+
+- GSC P1 保持首页 title、H1、检测工具和核心转化内容稳定，只在后段新增 Guide 内链区块；新增 6 个信息型支持页：检测方法、AI 语音迹象、克隆语音核验、检测准确率、检测隐私、AI 语音诈骗电话。
+- 新页由 `scripts/build_support_guides.py` 生成，正文约 698-782 词，均包含唯一 metadata、canonical、OG/Twitter、Article、BreadcrumbList、FAQPage、原始 HTML 正文、图片和相关内链；`public/sitemap.xml` 与 `src/server/handlers.js` 动态 sitemap 均已登记。
+- 准确率页不使用无来源的通用百分比，明确 0.30/0.70 是本站界面分类阈值而非模型准确率。隐私页按当前实现说明 16 kHz 单声道、最多 30 秒、本站不主动保留音频文件、实时检测发送至 Modulate Velma-2，并提醒第三方处理条款和敏感音频边界。
+- Node v24.6.0 全量测试 24/24 通过；六页本地 HTTP 200，动态 sitemap 收录 6/6。视觉检查覆盖 1440x900 和 390x844，修复移动端 Guide 导航，使 7 个入口在两行内全部可见且无横向页面溢出。
+
 ## 2026-06-18
 
 - 网站实际项目目录为 `voiceaichecker.com/`。
