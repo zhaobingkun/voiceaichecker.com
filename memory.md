@@ -120,3 +120,4 @@
 - 生产 Supabase 已执行迁移并用 `to_regclass` 查询确认 `detection_events` 表及 3 个视图都存在；迁移执行结果为 Success。
 - 隐私政策更新至 2026-09-11，披露产品统计和 Google Analytics；全站脚本使用 `v=20260911-product-events` 版本参数避免旧 CDN 缓存。
 - 本地完整 `npm test` 27/27 通过，4 个 JavaScript 文件 `node --check` 通过，`git diff --check` 通过。真实支付端到端测试仍需在最终扣款前由用户再次确认；本轮未上传音频、未消耗 Modulate 积分、未发起付款。
+- 产品统计改动提交为 `f028221 Add product analytics and retention reporting` 并推送 `main`；Vercel Production Deployment 已显示 Ready 且 Source 为该提交。生产首页已确认加载 `/app.js?v=20260911-product-events` 和 `/analytics.js?v=20260911-product-events`，生产隐私页已确认显示新披露；`/api/health` 返回 `providerConfigured`、`authConfigured`、`supabaseConfigured`、`creemConfigured` 均为 true，配额后端为 Supabase。
