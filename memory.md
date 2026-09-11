@@ -110,3 +110,13 @@
 - 已将浏览器检测样本统一降采样为最高 16kHz 单声道 PCM16 WAV：30 秒样本约 960KB，Base64 后约 1.28MB；同时增加 32 秒网络超时、断连/非 JSON 响应的可理解错误提示，并给首页脚本增加版本参数避免旧缓存继续运行。
 - 新增音频预处理回归测试，验证 48kHz 立体声 30 秒输出为 16kHz 单声道且小于 1MB，并验证低采样率音频不会被上采样；完整 `npm test` 共 23 项通过，`node --check` 与 `git diff --check` 均通过。
 - 网络与性能修复已提交为 `d493dd1 Reduce voice upload size and handle network failures` 并推送 `main`。Vercel Production Deployment 显示该提交为 Ready；生产首页已确认加载 `/app.js?v=20260905-network-fix`，线上 `/audio-processing.js` 内容已确认使用 `VOICE_SAMPLE_RATE = 16000`。未代替用户上传真实音频，因此没有额外消耗检测积分。
+
+## 2026-09-11
+
+- 不按第三方 SEO 报告直接合并或重定向现有落地页；先建立可验证的产品漏斗与回头客数据，再结合 GSC 的 query-page 数据决定页面去留。
+- 浏览器端新增 GA4 产品事件：`audio_selected`、`detect_start`、`detect_success`、`detect_failed`、`login_click`、`login_success`、`pricing_view`、`checkout_start`、`checkout_success_return`。事件只发送页面路径和有限分类字段，不发送音频、文件名、邮箱或身份哈希；`checkout_success_return` 只表示返回成功页，不冒充已确认的 `purchase` webhook。
+- 服务端新增隐私友好的 `detection_events` 事件写入：匿名 IP 或登录用户 ID 先用 HMAC-SHA256 转为稳定身份哈希，再记录成功/失败/配额拒绝、计划、分析秒数、页面、供应商、缓存状态、结果分类、错误分类和耗时。事件表不存音频、文件名、邮箱、Google ID 或原始 IP；统计写入失败只记录日志，不阻断检测主流程。
+- 新增 `supabase-detection-analytics.sql`、`analytics-weekly.sql` 和 3 个只向 `service_role` 开放的视图：`detection_analytics_daily`、`detection_retention_30d`、`detection_weekly_dashboard`，可查询检测成功率、唯一检测用户、重复使用率、跨周回头客和错误分类。
+- 生产 Supabase 已执行迁移并用 `to_regclass` 查询确认 `detection_events` 表及 3 个视图都存在；迁移执行结果为 Success。
+- 隐私政策更新至 2026-09-11，披露产品统计和 Google Analytics；全站脚本使用 `v=20260911-product-events` 版本参数避免旧 CDN 缓存。
+- 本地完整 `npm test` 27/27 通过，4 个 JavaScript 文件 `node --check` 通过，`git diff --check` 通过。真实支付端到端测试仍需在最终扣款前由用户再次确认；本轮未上传音频、未消耗 Modulate 积分、未发起付款。

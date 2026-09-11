@@ -42,6 +42,42 @@ let recordedChunks = [];
 let recordStartedAt = 0;
 let recordTimer = null;
 let accountState = null;
+let selectedInputSource = "upload";
+
+const trackEvent = (name, params = {}) => {
+  if (typeof window.trackVoiceCheckerEvent === "function") {
+    window.trackVoiceCheckerEvent(name, params);
+    return;
+  }
+
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function gtag() {
+    window.dataLayer.push(arguments);
+  };
+  window.gtag("event", name, { ...params, page_path: window.location.pathname, transport_type: "beacon" });
+};
+
+const currentUserType = () => {
+  if (!accountState?.user) return "anonymous";
+  return accountState.isPro ? "pro" : "free_account";
+};
+
+const fileSizeBucket = (bytes) => {
+  if (bytes < 250 * 1024) return "under_250kb";
+  if (bytes < 1024 * 1024) return "250kb_to_1mb";
+  if (bytes < 5 * 1024 * 1024) return "1mb_to_5mb";
+  return "over_5mb";
+};
+
+const detectionErrorCategory = (error) => {
+  const message = String(error?.message || "").toLowerCase();
+  if (error?.statusCode === 429 || message.includes("daily") || message.includes("quota")) return "quota";
+  if (error?.name === "AbortError" || message.includes("timed out")) return "timeout";
+  if (message.includes("network") || message.includes("failed to fetch")) return "network";
+  if (message.includes("audio") || message.includes("wav") || message.includes("file")) return "audio_input";
+  if (Number(error?.statusCode) >= 500) return "server";
+  return "unknown";
+};
 
 const formatBytes = (bytes) => {
   if (!bytes) return "0 B";
@@ -211,15 +247,21 @@ const drawFileWaveform = async (file) => {
   }
 };
 
-const setSelectedFile = async (file) => {
+const setSelectedFile = async (file, inputSource = "upload") => {
   if (!file) return;
   selectedFile = file;
+  selectedInputSource = inputSource;
   fileName.textContent = file.name || "Recorded audio";
   fileMeta.textContent = `${file.type || "audio"} · ${formatBytes(file.size)}`;
   fileRow.hidden = false;
   detectButton.disabled = false;
   resultSection.hidden = true;
   setStatus(`Ready to analyze up to ${secondsInput.value} seconds.`);
+  trackEvent("audio_selected", {
+    input_source: selectedInputSource,
+    file_type: String(file.type || "unknown").slice(0, 40),
+    file_size_bucket: fileSizeBucket(file.size)
+  });
   await drawFileWaveform(file);
 };
 
@@ -286,8 +328,14 @@ const showResult = (result) => {
 
 const detectSelectedFile = async () => {
   if (!selectedFile) return;
+  const detectionStartedAt = performance.now();
   detectButton.disabled = true;
   setStatus(`Preparing first ${secondsInput.value} seconds...`);
+  trackEvent("detect_start", {
+    input_source: selectedInputSource,
+    user_type: currentUserType(),
+    analyze_seconds: Number(secondsInput.value)
+  });
   let timeout;
 
   try {
@@ -305,7 +353,9 @@ const detectSelectedFile = async () => {
           audioBase64: await fileToBase64(uploadFile),
           filename: uploadFile.name,
           mimeType: uploadFile.type,
-          analyzeSeconds: Number(secondsInput.value)
+          analyzeSeconds: Number(secondsInput.value),
+          inputSource: selectedInputSource,
+          pagePath: window.location.pathname
         }),
         signal: controller.signal
       });
@@ -320,9 +370,23 @@ const detectSelectedFile = async () => {
     const payload = responseType.includes("application/json")
       ? await response.json()
       : { error: `Detection service returned HTTP ${response.status}.` };
-    if (!response.ok) throw new Error(payload.error || "Detection failed.");
+    if (!response.ok) {
+      const responseError = new Error(payload.error || "Detection failed.");
+      responseError.statusCode = response.status;
+      throw responseError;
+    }
 
     showResult(payload);
+    trackEvent("detect_success", {
+      input_source: selectedInputSource,
+      user_type: currentUserType(),
+      analyze_seconds: Number(payload.analyzedSeconds) || Number(secondsInput.value),
+      provider: String(payload.provider || "unknown"),
+      result_label: String(payload.label || "unknown"),
+      confidence: String(payload.confidence || "unknown"),
+      cached: Boolean(payload.cached),
+      duration_ms: Math.round(performance.now() - detectionStartedAt)
+    });
     if (accountState) {
       accountState.remainingDailyDetections = payload.remainingDailyDetections;
       renderAccount(accountState);
@@ -331,6 +395,13 @@ const detectSelectedFile = async () => {
     }
     setStatus(payload.cached ? "Returned cached result." : "Detection complete.");
   } catch (error) {
+    trackEvent("detect_failed", {
+      input_source: selectedInputSource,
+      user_type: currentUserType(),
+      analyze_seconds: Number(secondsInput.value),
+      error_category: detectionErrorCategory(error),
+      duration_ms: Math.round(performance.now() - detectionStartedAt)
+    });
     setStatus(error.message || "Detection failed.", true);
   } finally {
     if (timeout) window.clearTimeout(timeout);
@@ -349,7 +420,7 @@ const startRecording = async () => {
     stream.getTracks().forEach((track) => track.stop());
     const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
     const file = new File([blob], `voice-recording-${Date.now()}.webm`, { type: blob.type });
-    await setSelectedFile(file);
+    await setSelectedFile(file, "record");
   });
 
   recordStartedAt = Date.now();
@@ -417,7 +488,7 @@ if (hasDetectorUi) {
   recordTab.addEventListener("click", () => setTab("record"));
 
   fileInput.addEventListener("change", async () => {
-    await setSelectedFile(fileInput.files?.[0]);
+    await setSelectedFile(fileInput.files?.[0], "upload");
   });
 
   ["dragenter", "dragover"].forEach((eventName) => {
@@ -435,7 +506,7 @@ if (hasDetectorUi) {
   });
 
   dropZone.addEventListener("drop", async (event) => {
-    await setSelectedFile(event.dataTransfer?.files?.[0]);
+    await setSelectedFile(event.dataTransfer?.files?.[0], "upload");
   });
 
   clearButton.addEventListener("click", clearSelectedFile);

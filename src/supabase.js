@@ -108,6 +108,63 @@ export const getDetectionQuota = async ({ usageDate, identityKey, limit }) => {
   };
 };
 
+export const recordDetectionEvent = async ({
+  requestId,
+  identityHash,
+  identityType,
+  plan,
+  status,
+  provider = null,
+  cached = false,
+  resultLabel = null,
+  analyzeSeconds = null,
+  durationMs = null,
+  errorCode = null,
+  inputSource = null,
+  pagePath = null
+}) => {
+  if (!isSupabaseConfigured()) return { ok: false, skipped: true };
+
+  const body = JSON.stringify({
+    request_id: requestId,
+    identity_hash: identityHash,
+    identity_type: identityType,
+    plan,
+    status,
+    provider,
+    cached: Boolean(cached),
+    result_label: resultLabel,
+    analyze_seconds: analyzeSeconds,
+    duration_ms: durationMs,
+    error_code: errorCode,
+    input_source: inputSource,
+    page_path: pagePath
+  });
+
+  const response = await requestJson({
+    method: "POST",
+    url: `${config.supabaseUrl}/rest/v1/detection_events`,
+    headers: {
+      apikey: config.supabaseServiceRoleKey,
+      Authorization: `Bearer ${config.supabaseServiceRoleKey}`,
+      "Content-Type": "application/json",
+      "Content-Length": String(Buffer.byteLength(body)),
+      Prefer: "return=minimal"
+    },
+    body
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      response.payload?.message ||
+        response.payload?.error ||
+        `Supabase detection event insert failed with HTTP ${response.status}`
+    );
+  }
+
+  return { ok: true };
+};
+
 export const upsertUser = async (user) => {
   if (!isSupabaseConfigured()) return { ok: false, skipped: true };
 

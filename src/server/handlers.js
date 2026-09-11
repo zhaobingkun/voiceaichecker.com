@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac, randomUUID } from "node:crypto";
 
 import {
   buildGoogleLoginUrl,
@@ -16,6 +16,7 @@ import {
   getDetectionQuota,
   getUserSubscription,
   isSupabaseConfigured,
+  recordDetectionEvent,
   upsertSubscription
 } from "../supabase.js";
 
@@ -76,13 +77,67 @@ const usageKeyForRequest = async (req) => {
       user,
       subscription,
       isPro,
+      analyticsIdentity: `user:${user.id}`,
       key: `${todayKey()}:user:${user.id}:${isPro ? "pro" : "free"}`,
       limit: isPro ? config.proDailyLimit : config.authenticatedDailyLimit
     };
   }
 
   const ip = getIp(req);
-  return { user: null, subscription: null, isPro: false, key: `${todayKey()}:ip:${ip}`, limit: config.dailyIpLimit };
+  return {
+    user: null,
+    subscription: null,
+    isPro: false,
+    analyticsIdentity: `ip:${ip}`,
+    key: `${todayKey()}:ip:${ip}`,
+    limit: config.dailyIpLimit
+  };
+};
+
+const analyticsIdentityHash = (quota) =>
+  createHmac(
+    "sha256",
+    config.sessionSecret || config.googleClientSecret || "local-dev-analytics-secret"
+  )
+    .update(quota.analyticsIdentity)
+    .digest("hex");
+
+const analyticsPlan = (quota) => (quota.isPro ? "pro" : quota.user ? "free_account" : "anonymous");
+
+const safeInputSource = (value) => (value === "record" || value === "upload" ? value : "unknown");
+
+const safePagePath = (value) => {
+  const path = String(value || "").slice(0, 160);
+  return /^\/[a-z0-9/_-]*$/i.test(path) ? path : null;
+};
+
+const detectionErrorCode = (error) => {
+  const message = String(error?.message || "").toLowerCase();
+  if (message.includes("missing audio") || message.includes("empty")) return "missing_audio";
+  if (message.includes("wav") || message.includes("audio file")) return "invalid_audio";
+  if (message.includes("too large")) return "payload_too_large";
+  if (message.includes("timed out")) return "provider_timeout";
+  if (error?.statusCode === 503) return "provider_unavailable";
+  if (error?.statusCode === 502) return "provider_error";
+  return "request_error";
+};
+
+const writeDetectionEvent = async ({ quota, requestId, startedAt, ...details }) => {
+  try {
+    await recordDetectionEvent({
+      requestId,
+      identityHash: analyticsIdentityHash(quota),
+      identityType: quota.user ? "authenticated" : "anonymous",
+      plan: analyticsPlan(quota),
+      durationMs: Math.max(0, Date.now() - startedAt),
+      ...details
+    });
+  } catch (error) {
+    console.error("Detection analytics write failed", {
+      requestId,
+      message: error.message
+    });
+  }
 };
 
 const remainingForKey = (key, limit) => Math.max(0, limit - (usage.get(key) || 0));
@@ -149,6 +204,8 @@ const setCachedDetection = (cacheKey, value) => {
 };
 
 export const handleDetect = async (req, res) => {
+  const requestId = randomUUID();
+  const startedAt = Date.now();
   const quota = await usageKeyForRequest(req);
   let quotaState;
 
@@ -164,6 +221,13 @@ export const handleDetect = async (req, res) => {
   }
 
   if (!quotaState.allowed) {
+    await writeDetectionEvent({
+      quota,
+      requestId,
+      startedAt,
+      status: "quota_rejected",
+      errorCode: "daily_limit"
+    });
     sendJson(res, 429, {
       error: quota.user
         ? "Daily account limit reached. Try again tomorrow."
@@ -172,83 +236,122 @@ export const handleDetect = async (req, res) => {
     return;
   }
 
-  const body = await readJsonBody(req);
-  const audioBase64 = String(body.audioBase64 || "").replace(/^data:[^,]+,/, "");
-  const filename = String(body.filename || "audio-upload").slice(0, 160);
-  const mimeType = String(body.mimeType || "application/octet-stream").toLowerCase();
-  const maxAnalyzeSeconds = quota.user
-    ? config.maxAnalyzeSeconds
-    : Math.min(config.maxAnalyzeSeconds, config.anonymousMaxAnalyzeSeconds);
-  const requestedSeconds = Math.trunc(Number(body.analyzeSeconds) || maxAnalyzeSeconds);
-  const analyzeSeconds = Math.max(1, Math.min(maxAnalyzeSeconds, requestedSeconds));
+  let analyticsDetails = {};
 
-  if (!audioBase64) throw new Error("Missing audio file.");
-  if (!allowedAudioTypes.has(mimeType)) {
-    throw new Error("Server accepts WAV only. The browser converts supported uploads before detection.");
-  }
+  try {
+    const body = await readJsonBody(req);
+    const audioBase64 = String(body.audioBase64 || "").replace(/^data:[^,]+,/, "");
+    const filename = String(body.filename || "audio-upload").slice(0, 160);
+    const mimeType = String(body.mimeType || "application/octet-stream").toLowerCase();
+    const maxAnalyzeSeconds = quota.user
+      ? config.maxAnalyzeSeconds
+      : Math.min(config.maxAnalyzeSeconds, config.anonymousMaxAnalyzeSeconds);
+    const requestedSeconds = Math.trunc(Number(body.analyzeSeconds) || maxAnalyzeSeconds);
+    const analyzeSeconds = Math.max(1, Math.min(maxAnalyzeSeconds, requestedSeconds));
+    analyticsDetails = {
+      analyzeSeconds,
+      inputSource: safeInputSource(body.inputSource),
+      pagePath: safePagePath(body.pagePath)
+    };
 
-  const audioBuffer = Buffer.from(audioBase64, "base64");
-  if (!audioBuffer.length) throw new Error("Audio file is empty.");
-  if (audioBuffer.length > limits.maxFileBytes) {
-    throw new Error(`Processed audio sample is too large. Max sample size is ${config.maxFileMb}MB.`);
-  }
+    if (!audioBase64) throw new Error("Missing audio file.");
+    if (!allowedAudioTypes.has(mimeType)) {
+      throw new Error("Server accepts WAV only. The browser converts supported uploads before detection.");
+    }
 
-  const trimmedAudio = trimWavBuffer({ buffer: audioBuffer, maxSeconds: analyzeSeconds });
-  if (trimmedAudio.buffer.length > limits.maxFileBytes) {
-    throw new Error(`Trimmed audio is too large. Max sample size is ${config.maxFileMb}MB.`);
-  }
+    const audioBuffer = Buffer.from(audioBase64, "base64");
+    if (!audioBuffer.length) throw new Error("Audio file is empty.");
+    if (audioBuffer.length > limits.maxFileBytes) {
+      throw new Error(`Processed audio sample is too large. Max sample size is ${config.maxFileMb}MB.`);
+    }
 
-  const fileHash = createHash("sha256").update(trimmedAudio.buffer).digest("hex");
-  const cacheKey = `${fileHash}:${analyzeSeconds}`;
-  const cached = getCachedDetection(cacheKey);
+    const trimmedAudio = trimWavBuffer({ buffer: audioBuffer, maxSeconds: analyzeSeconds });
+    if (trimmedAudio.buffer.length > limits.maxFileBytes) {
+      throw new Error(`Trimmed audio is too large. Max sample size is ${config.maxFileMb}MB.`);
+    }
 
-  if (cached) {
+    const fileHash = createHash("sha256").update(trimmedAudio.buffer).digest("hex");
+    const cacheKey = `${fileHash}:${analyzeSeconds}`;
+    const cached = getCachedDetection(cacheKey);
+
+    if (cached) {
+      await writeDetectionEvent({
+        quota,
+        requestId,
+        startedAt,
+        ...analyticsDetails,
+        status: "success",
+        provider: cached.provider,
+        cached: true,
+        resultLabel: cached.label
+      });
+      sendJson(res, 200, {
+        ...cached,
+        cached: true,
+        user: quota.user,
+        subscription: quota.subscription,
+        isPro: quota.isPro,
+        remainingDailyDetections: remainingForQuota({ usedCount: quotaState.usedCount, limit: quota.limit })
+      });
+      return;
+    }
+
+    const detection = await detectVoice({
+      audioBuffer: trimmedAudio.buffer,
+      filename: filename.replace(/\.[^.]+$/, "") + ".wav",
+      mimeType: "audio/wav",
+      analyzeSeconds,
+      apiKey: config.modulateApiKey,
+      apiUrl: config.modulateApiUrl,
+      timeoutMs: config.modulateRequestTimeoutMs
+    });
+
+    const aiProbability = detection.aiProbability;
+    const result = {
+      label: classifyScore(aiProbability),
+      aiProbability,
+      humanProbability: Number((1 - aiProbability).toFixed(4)),
+      confidence: confidenceForScore(aiProbability),
+      analyzedSeconds: analyzeSeconds,
+      provider: detection.provider,
+      cached: false,
+      notes:
+        detection.provider === "mock"
+          ? "Demo result. Add MODULATE_API_KEY and MODULATE_API_URL on the server to enable real detection."
+          : trimmedAudio.trimmed
+            ? `Only the first ${analyzeSeconds} seconds were analyzed. Detection is probabilistic and should be reviewed with context.`
+            : "Detection is probabilistic and should be reviewed with context."
+    };
+
+    setCachedDetection(cacheKey, result);
+    await writeDetectionEvent({
+      quota,
+      requestId,
+      startedAt,
+      ...analyticsDetails,
+      status: "success",
+      provider: detection.provider,
+      cached: false,
+      resultLabel: result.label
+    });
     sendJson(res, 200, {
-      ...cached,
-      cached: true,
+      ...result,
       user: quota.user,
       subscription: quota.subscription,
       isPro: quota.isPro,
       remainingDailyDetections: remainingForQuota({ usedCount: quotaState.usedCount, limit: quota.limit })
     });
-    return;
+  } catch (error) {
+    await writeDetectionEvent({
+      quota,
+      requestId,
+      startedAt,
+      ...analyticsDetails,
+      status: "failed",
+      errorCode: detectionErrorCode(error)
+    });
+    throw error;
   }
-
-  const detection = await detectVoice({
-    audioBuffer: trimmedAudio.buffer,
-    filename: filename.replace(/\.[^.]+$/, "") + ".wav",
-    mimeType: "audio/wav",
-    analyzeSeconds,
-    apiKey: config.modulateApiKey,
-    apiUrl: config.modulateApiUrl,
-    timeoutMs: config.modulateRequestTimeoutMs
-  });
-
-  const aiProbability = detection.aiProbability;
-  const result = {
-    label: classifyScore(aiProbability),
-    aiProbability,
-    humanProbability: Number((1 - aiProbability).toFixed(4)),
-    confidence: confidenceForScore(aiProbability),
-    analyzedSeconds: analyzeSeconds,
-    provider: detection.provider,
-    cached: false,
-    notes:
-      detection.provider === "mock"
-        ? "Demo result. Add MODULATE_API_KEY and MODULATE_API_URL on the server to enable real detection."
-        : trimmedAudio.trimmed
-          ? `Only the first ${analyzeSeconds} seconds were analyzed. Detection is probabilistic and should be reviewed with context.`
-          : "Detection is probabilistic and should be reviewed with context."
-  };
-
-  setCachedDetection(cacheKey, result);
-  sendJson(res, 200, {
-    ...result,
-    user: quota.user,
-    subscription: quota.subscription,
-    isPro: quota.isPro,
-    remainingDailyDetections: remainingForQuota({ usedCount: quotaState.usedCount, limit: quota.limit })
-  });
 };
 
 
@@ -532,7 +635,7 @@ export const handleGoogleLoginCallback = async (req, res, requestUrl) => {
 
   try {
     await handleGoogleCallback({ req, code, state, res });
-    redirect(res, "/");
+    redirect(res, "/?login=success");
   } catch (error) {
     redirect(res, `/?auth_error=${encodeURIComponent(error.message || "Google sign-in failed.")}`);
   }

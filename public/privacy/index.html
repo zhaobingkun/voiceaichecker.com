@@ -32,7 +32,7 @@
       <article class="legal-page">
         <p class="eyebrow">Privacy Policy</p>
         <h1>Privacy Policy</h1>
-        <p>Last updated: June 23, 2026</p>
+        <p>Last updated: September 11, 2026</p>
 
         <h2>What We Collect</h2>
         <p>
@@ -50,9 +50,24 @@
 
         <h2>Storage</h2>
         <p>
-          This MVP does not intentionally store uploaded audio files after a detection request completes. Detection
-          results and usage counters may be kept temporarily in server memory for caching, rate limiting, and debugging.
-          Server memory is cleared when the process restarts.
+          We do not intentionally store uploaded audio files after a detection request completes. Detection results and
+          usage counters may be kept temporarily in server memory for caching, rate limiting, and debugging. Server
+          memory is cleared when the process restarts.
+        </p>
+        <p>
+          To measure reliability, product usage, and repeat use, we keep a pseudonymous detection event. It can include
+          a one-way hashed visitor or account identifier, the event date, signed-in category, plan, selected analysis
+          length, referring page path, outcome or broad error category, provider name, cache status, result category,
+          and processing time. This event does not contain the audio, file name, email address, Google account ID, or
+          raw IP address.
+        </p>
+
+        <h2>Analytics</h2>
+        <p>
+          We use Google Analytics to understand page visits and product interactions such as selecting audio, starting
+          or completing a detection, viewing pricing, starting checkout, and returning from checkout. We send broad
+          event categories and page paths rather than audio content, file names, or detection identity hashes. Google
+          may process device, browser, and network information under its own terms.
         </p>
 
         <h2>Google Login</h2>
@@ -91,7 +106,7 @@
         </div></footer>
       </article>
     </main>
-    <script src="/app.js" type="module"></script>
-    <script src="/analytics.js" defer></script>
+    <script src="/app.js?v=20260911-product-events" type="module"></script>
+    <script src="/analytics.js?v=20260911-product-events" defer></script>
 </body>
 </html>
