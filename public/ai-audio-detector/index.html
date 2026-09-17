@@ -115,7 +115,7 @@
           <p class="eyebrow">Audio file screening</p>
           <h1 id="page-title">AI Audio Detector</h1>
           <p class="summary">Check the speech inside an audio file before you publish it, quote it, or treat it as a real human recording.</p>
-          <div class="trust-row" aria-label="Service limits"><span>Speech focused</span><span>30 sec max</span><span>Login optional</span></div>
+          <div class="trust-row" aria-label="Service limits"><span>Speech focused</span><span>15 sec guest / 30 sec account</span><span>Login optional</span></div>
         </div>
         <div class="detector-panel">
           <div class="tabs" role="tablist" aria-label="Audio source"><button class="tab is-active" id="upload-tab" type="button" role="tab" aria-selected="true">Upload</button><button class="tab" id="record-tab" type="button" role="tab" aria-selected="false">Record</button></div>
@@ -124,6 +124,7 @@
           <div class="file-row" id="file-row" hidden><div><strong id="file-name">No file selected</strong><span id="file-meta">-</span></div><button class="icon-button" id="clear-button" type="button" aria-label="Clear selected audio">x</button></div>
           <canvas class="waveform" id="waveform" width="840" height="180" aria-label="Audio waveform"></canvas>
           <div class="control-row"><label for="seconds-input">Analyze up to</label><div class="seconds-control"><input id="seconds-input" type="range" min="5" max="30" step="5" value="30" /><output id="seconds-output" for="seconds-input">30s</output></div></div>
+          <p class="analysis-limit-note">Without sign-in: up to 15 seconds per check. Free and Pro accounts: up to 30 seconds per check.</p>
           <button class="primary-button" id="detect-button" type="button" disabled>Detect audio</button><p class="status" id="status" role="status"></p>
         </div>
       </section>

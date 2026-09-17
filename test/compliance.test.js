@@ -29,6 +29,17 @@ const strengthenedSeoPages = [
   "public/is-this-voice-ai/index.html"
 ];
 
+const detectorPages = [
+  "public/index.html",
+  "public/free-ai-voice-detector/index.html",
+  "public/ai-audio-detector/index.html",
+  "public/deepfake-audio-detector/index.html",
+  "public/voice-clone-detector/index.html",
+  "public/ai-voice-checker/index.html",
+  "public/voice-ai-checker/index.html",
+  "public/is-this-voice-ai/index.html"
+];
+
 const supportGuidePages = [
   "public/how-to-detect-ai-voice/index.html",
   "public/signs-of-ai-generated-voice/index.html",
@@ -123,6 +134,19 @@ test("customer-facing pages disclose the live detection provider and model", asy
     assert.match(html, /Modulate/i, `${page} must identify Modulate`);
     assert.match(html, /Velma-2 Synthetic Voice Detection/i, `${page} must identify Velma-2`);
   }
+});
+
+test("detector and pricing pages explain guest and account audio limits", async () => {
+  for (const page of detectorPages) {
+    const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
+    assert.match(html, /Without sign-in: up to 15 seconds per check/i, `${page} must explain the guest limit`);
+    assert.match(html, /Free and Pro accounts: up to 30 seconds per check/i, `${page} must explain account limits`);
+  }
+
+  const pricing = await readFile(new URL("../public/pricing/index.html", import.meta.url), "utf8");
+  assert.match(pricing, /without login, up to 15 seconds each/i);
+  assert.match(pricing, /Google login, up to 30 seconds each/i);
+  assert.match(pricing, /subscription is active, up to 30 seconds each/i);
 });
 
 test("strengthened SEO landing pages keep enough unique visible content", async () => {
