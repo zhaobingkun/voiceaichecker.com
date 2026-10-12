@@ -6,7 +6,8 @@
 - 执行后在 Supabase Table Editor 确认 `credit_balances`、`credit_transactions`、`pro_monthly_usage`、`pro_monthly_transactions` 已出现；原有 `users`、`daily_detection_usage`、`detection_events` 仍在。迁移脚本还创建或更新每日免费、永久积分和 Pro 月额度相关 RPC，应用发布时可按每日免费 → Pro 月额度 → 永久积分的顺序调用。
 - 本地目录已通过 Vercel CLI 关联到 `zhaobingkuns-projects-b2b82dc8/voiceaichecker-com`；Vercel Production 和 Preview 已配置 `DAILY_IP_LIMIT=1`、`AUTH_DAILY_LIMIT=3`、`PRO_MONTHLY_LIMIT=50`，环境变量列表确认三项均存在。旧 `PRO_DAILY_LIMIT` 保留但新代码不再读取。
 - Creem 正式商店已创建 Active 一次性商品 `VoiceAIChecker 20 Detection Credits`，价格为 $4.99（税费另计），Product ID 为 `prod_1X59fhDYAjbycUhuhRQUi7`；该 ID 已作为 `CREEM_CREDITS_PRODUCT_ID` 写入 Vercel Production 和 Preview。
-- 数据库、Creem 商品和 Vercel 环境变量均已完成；新付费规则仍需提交、推送、部署并做生产冒烟验证后才能宣布整体上线。
+- 新规则代码已提交为 `d0c4ee2 Add paid detection credits and monthly Pro quota` 并推送 `main`；因 Git 自动部署没有产生新记录，改用已关联的 Vercel CLI 直接部署，生产部署 `voiceaichecker-5ehcstqrh-zhaobingkuns-projects-b2b82dc8.vercel.app` 构建成功并已 alias 到 `https://voiceaichecker.com`。
+- 生产冒烟验证通过：`/api/health` 返回 provider/auth/Supabase/Creem 均已配置，`creditsCheckoutConfigured=true`，`dailyIpLimit=1`、`authenticatedDailyLimit=3`、`proMonthlyLimit=50`、积分包为 20 次 / $4.99；首页已显示 Usage update、1/3 免费规则和 $4.99/20 次，价格页已显示 20 detection credits、Pro 每月 50 次和 $9.90/月。
 
 ## 2026-10-11
 
