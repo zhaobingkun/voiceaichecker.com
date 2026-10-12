@@ -75,15 +75,18 @@ export const config = {
   creemApiBaseUrl: (process.env.CREEM_API_BASE_URL || "https://api.creem.io").replace(/\/+$/, ""),
   creemWebhookSecret: process.env.CREEM_WEBHOOK_SECRET || "",
   creemProProductId: process.env.CREEM_PRO_PRODUCT_ID || "prod_12r7OKEp2EKXmH8Hsyz5oN",
+  creemCreditsProductId: process.env.CREEM_CREDITS_PRODUCT_ID || "",
+  creditPackChecks: Math.trunc(toNumber(process.env.CREDIT_PACK_CHECKS, 20)),
+  creditPackPriceUsd: toNumber(process.env.CREDIT_PACK_PRICE_USD, 4.99),
   maxFileMb: toNumber(process.env.MAX_FILE_MB, 10),
   maxAnalyzeSeconds: Math.trunc(toNumber(process.env.MAX_ANALYZE_SECONDS, 30)),
   modulateRequestTimeoutMs: Math.trunc(toNumber(process.env.MODULATE_REQUEST_TIMEOUT_MS, 25000)),
   cacheTtlSeconds: Math.trunc(toNumber(process.env.DETECTION_CACHE_TTL_SECONDS, 3600)),
   cacheMaxEntries: Math.trunc(toNumber(process.env.DETECTION_CACHE_MAX_ENTRIES, 1000)),
   anonymousMaxAnalyzeSeconds: Math.trunc(toNumber(process.env.ANONYMOUS_MAX_ANALYZE_SECONDS, 15)),
-  dailyIpLimit: Math.trunc(toNumber(process.env.DAILY_IP_LIMIT, 3)),
-  authenticatedDailyLimit: Math.trunc(toNumber(process.env.AUTH_DAILY_LIMIT, 10)),
-  proDailyLimit: Math.trunc(toNumber(process.env.PRO_DAILY_LIMIT, 20))
+  dailyIpLimit: Math.trunc(toNumber(process.env.DAILY_IP_LIMIT, 1)),
+  authenticatedDailyLimit: Math.trunc(toNumber(process.env.AUTH_DAILY_LIMIT, 3)),
+  proMonthlyLimit: Math.trunc(toNumber(process.env.PRO_MONTHLY_LIMIT, 50))
 };
 
 export const limits = {

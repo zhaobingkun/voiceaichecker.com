@@ -17,13 +17,15 @@ create table if not exists public.detection_events (
   error_code text,
   input_source text,
   page_path text,
+  quota_source text,
   constraint detection_events_identity_hash_check check (identity_hash ~ '^[a-f0-9]{64}$'),
   constraint detection_events_identity_type_check check (identity_type in ('anonymous', 'authenticated')),
   constraint detection_events_plan_check check (plan in ('anonymous', 'free_account', 'pro')),
   constraint detection_events_status_check check (status in ('success', 'failed', 'quota_rejected')),
   constraint detection_events_seconds_check check (analyze_seconds is null or analyze_seconds between 1 and 120),
   constraint detection_events_duration_check check (duration_ms is null or duration_ms >= 0),
-  constraint detection_events_input_source_check check (input_source is null or input_source in ('upload', 'record', 'unknown'))
+  constraint detection_events_input_source_check check (input_source is null or input_source in ('upload', 'record', 'unknown')),
+  constraint detection_events_quota_source_check check (quota_source is null or quota_source in ('daily_free', 'pro_monthly', 'credit'))
 );
 
 create index if not exists detection_events_event_date_status_idx
@@ -183,4 +185,3 @@ grant all on table public.detection_events to service_role;
 grant select on public.detection_analytics_daily to service_role;
 grant select on public.detection_retention_30d to service_role;
 grant select on public.detection_weekly_dashboard to service_role;
-

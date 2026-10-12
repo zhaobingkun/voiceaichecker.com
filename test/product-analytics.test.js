@@ -13,12 +13,21 @@ test("browser analytics covers the detection, login, pricing, and checkout funne
     "login_click",
     "login_success",
     "checkout_start",
-    "checkout_success_return"
+    "checkout_success_return",
+    "credit_checkout_start",
+    "credit_checkout_return"
   ]) {
     assert.match(analytics, new RegExp(`\\b${eventName}\\b`), `missing ${eventName}`);
   }
 
-  for (const eventName of ["audio_selected", "detect_start", "detect_success", "detect_failed"]) {
+  for (const eventName of [
+    "audio_selected",
+    "detect_start",
+    "detect_success",
+    "detect_failed",
+    "credit_offer_view",
+    "credit_offer_click"
+  ]) {
     assert.match(detector, new RegExp(`\\b${eventName}\\b`), `missing ${eventName}`);
   }
 });
@@ -29,6 +38,8 @@ test("server-side detection analytics schema is private and supports repeat-use 
   assert.match(migration, /create table if not exists public\.detection_events/i);
   assert.match(migration, /create or replace view public\.detection_retention_30d/i);
   assert.match(migration, /create or replace view public\.detection_weekly_dashboard/i);
+  assert.match(migration, /quota_source text/i);
+  assert.match(migration, /pro_monthly/i);
   assert.match(migration, /alter table public\.detection_events enable row level security/i);
   assert.match(migration, /revoke all on table public\.detection_events from public, anon, authenticated/i);
   assert.doesNotMatch(migration, /^\s*(email|filename|file_name|raw_ip|google_id)\s+/im);

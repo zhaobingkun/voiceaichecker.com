@@ -9,6 +9,7 @@ import {
   handleGoogleLogin,
   handleGoogleLoginCallback,
   handleCheckout,
+  handleCreditsCheckout,
   handleCreemWebhook,
   handleHealth,
   handleLogout,
@@ -107,6 +108,11 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "POST" && requestUrl.pathname === "/api/checkout") {
       await handleCheckout(req, res);
+      return;
+    }
+
+    if (req.method === "POST" && requestUrl.pathname === "/api/credits/checkout") {
+      await handleCreditsCheckout(req, res);
       return;
     }
 

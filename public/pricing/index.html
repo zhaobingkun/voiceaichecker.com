@@ -4,16 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pricing | AI Voice Detector</title>
-    <meta name="description" content="AI Voice Detector pricing, free daily checks, and the Pro plan at $9.90 per month with 20 checks per day." />
+    <meta name="description" content="AI Voice Detector pricing: free daily checks, Pro with 50 monthly checks for $9.90, or 20 permanent checks for a one-time $4.99." />
     <link rel="canonical" href="https://voiceaichecker.com/pricing/" />
     <meta property="og:title" content="Pricing | AI Voice Detector" />
-    <meta property="og:description" content="AI Voice Detector pricing, free daily checks, and the Pro plan at $9.90 per month with 20 checks per day." />
+    <meta property="og:description" content="Compare free checks, $9.90 Pro with 50 monthly checks, and 20 permanent checks for $4.99." />
     <meta property="og:url" content="https://voiceaichecker.com/pricing/" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://voiceaichecker.com/assets/voice-detection-hero.png" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="Pricing | AI Voice Detector" />
-    <meta name="twitter:description" content="AI Voice Detector pricing, free daily checks, and the Pro plan at $9.90 per month with 20 checks per day." />
+    <meta name="twitter:description" content="Compare free checks, $9.90 Pro with 50 monthly checks, and 20 permanent checks for $4.99." />
     <meta name="twitter:image" content="https://voiceaichecker.com/assets/voice-detection-hero.png" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/styles.css" />
@@ -23,63 +23,64 @@
       <article class="legal-page">
         <p class="eyebrow">Free-first pricing</p>
         <h1>Pricing</h1>
-        <p>Last updated: June 23, 2026</p>
-        <p class="answer">AI Voice Detector is designed to stay free for normal short audio checks. Pro is $9.90 per month and includes up to 20 checks per day for signed-in users.</p>
+        <p>Last updated: October 11, 2026</p>
+        <p class="answer">Try the detector free each day. Pro adds 50 checks each UTC month for $9.90, while a one-time $4.99 credit pack adds 20 checks that do not expire.</p>
 
         <section class="pricing-grid" aria-label="AI Voice Detector plans">
           <article class="pricing-card is-featured">
-            <p class="plan-label">Current default</p>
+            <p class="plan-label">Daily allowance</p>
             <h2>Free</h2>
             <p class="price-line">$0</p>
             <ul>
-              <li>3 free checks per day without login, up to 15 seconds each</li>
-              <li>10 free checks per day with optional Google login, up to 30 seconds each</li>
+              <li>1 free check per day without login, up to 15 seconds each</li>
+              <li>3 free checks per day with optional Google login, up to 30 seconds each</li>
               <li>No payment required for basic use</li>
               <li>Probability-style AI voice signal, not a forensic conclusion</li>
             </ul>
             <p><a class="primary-button plan-button" href="/">Start free check</a></p>
           </article>
+          <article class="pricing-card" id="credit-pack">
+            <p class="plan-label">One-time purchase</p>
+            <h2>20 extra checks</h2>
+            <p class="price-line">$4.99 once</p>
+            <ul>
+              <li>20 detection credits added to the signed-in account</li>
+              <li>Credits do not expire and there is no subscription</li>
+              <li>Free daily and Pro monthly allowances are used before permanent credits</li>
+              <li>Failed or server-error detections automatically return the reserved credit</li>
+            </ul>
+            <form action="/api/credits/checkout" method="post"><button class="primary-button plan-button" type="submit">Buy 20 checks</button></form>
+            <p class="muted-copy">Google sign-in is required so the credits can be attached to your account. Secure checkout is provided by Creem.</p>
+          </article>
           <article class="pricing-card">
-            <p class="plan-label">Paid plan</p>
+            <p class="plan-label">Monthly plan</p>
             <h2>Pro</h2>
             <p class="price-line">$9.90/month</p>
             <ul>
-              <li>20 checks per day while the subscription is active, up to 30 seconds each</li>
-              <li>$9.90 monthly subscription billed through Creem</li>
-              <li>Subscription tied to the signed-in account</li>
-              <li>Each check uses the same 30-second analysis window as a signed-in free account</li>
+              <li>50 additional successful checks per UTC calendar month</li>
+              <li>Daily free checks are always used before the Pro allowance</li>
+              <li>Pro monthly checks reset and do not roll over</li>
+              <li>Request cancellation before renewal; existing permanent credits remain</li>
             </ul>
             <form action="/api/checkout" method="post"><button class="primary-button plan-button" type="submit">Subscribe to Pro</button></form>
-            <p class="muted-copy">Checkout opens through Creem after sign-in.</p>
-          </article>
-          <article class="pricing-card">
-            <p class="plan-label">For now</p>
-            <h2>No forced upgrade</h2>
-            <p class="price-line">Free stays first</p>
-            <ul>
-              <li>The detector remains usable without payment</li>
-              <li>Pro does not remove the free plan</li>
-              <li>No annual lock-in is planned for this version</li>
-              <li>Cancellation and refund terms will be shown before checkout</li>
-            </ul>
-            <p class="muted-copy">Free checks stay available alongside Pro.</p>
+            <p class="muted-copy">For users who regularly need more than the free daily allowance.</p>
           </article>
         </section>
 
         <h2>Free-first policy</h2>
-        <p>The main detector remains free. Pro at $9.90 per month includes up to 20 checks per day and is meant to cover heavier usage, provider costs, and abuse-resistant quota handling. A user should be able to understand the result and the tool limitations before seeing any payment prompt.</p>
+        <p>The main detector remains usable without payment. Anonymous users receive 1 check per UTC day, and users who sign in with Google receive 3 free checks per UTC day. Pro then provides 50 additional checks per UTC calendar month. Permanent purchased credits are used only after both free and Pro allowances are exhausted.</p>
 
         <h2>Detection technology</h2>
-        <p>Free and Pro live checks use the same underlying detection technology: <a href="https://www.modulate.ai/">Modulate</a>'s Velma-2 Synthetic Voice Detection API. Pro increases the daily usage allowance; it does not use a different model or guarantee a more certain result.</p>
+        <p>Free, Pro, and paid-credit live checks use the same underlying detection technology: <a href="https://www.modulate.ai/">Modulate</a>'s Velma-2 Synthetic Voice Detection API. Payment increases usage capacity; it does not use a different model or guarantee a more certain result.</p>
 
         <h2>Payments</h2>
-        <p>Pro checkout is handled by Creem. The checkout page shows the $9.90 monthly price, renewal terms, cancellation path, and refund policy before purchase.</p>
+        <p>Payments are handled by Creem. Pro renews monthly at $9.90 until canceled. The $4.99 credit pack is a one-time purchase and does not renew. Failed or server-error detections return any reserved Pro check or permanent credit.</p>
 
         <h2>Important limitation</h2>
         <p>AI voice detection is probabilistic. A paid check would not guarantee a more certain result, a legal finding, or a forensic conclusion. Results should be reviewed with audio context, source evidence, and direct confirmation when stakes are high.</p>
 
         <h2>Questions</h2>
-        <p>Contact <span class="support-email"><span>bingkun.zhao</span><span>&#64;</span><span>gmail.com</span></span> before subscribing if you need a different usage pattern.</p>
+        <p>Contact <span class="support-email"><span>bingkun.zhao</span><span>&#64;</span><span>gmail.com</span></span> if paid credits do not appear or you need help with an order.</p>
         <footer class="site-footer"><div class="footer-links"><a href="/">AI Voice Detector</a><a href="/pricing/">Pricing</a><a href="/refund-policy/">Refund Policy</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></div><div class="directory-badge"><a href="https://www.justsimple.tools" target="_blank" rel="noopener noreferrer"><img src="https://www.justsimple.tools/badge.svg" width="150" height="40" alt="Listed on JustSimple Tools" /></a></div><div class="share-links" aria-label="Share this page">
           <span class="share-label">Share</span>
           <a class="share-link" data-share="x" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer nofollow" aria-label="Share on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.9 2h3.3l-7.2 8.2L23.5 22h-6.7l-5.2-6.8L5.6 22H2.3l7.7-8.8L1.5 2h6.8l4.7 6.2L18.9 2Zm-1.2 17.9h1.8L7.3 4H5.4l12.3 15.9Z"/></svg><span>X</span></a>
@@ -89,7 +90,7 @@
         </div></footer>
       </article>
     </main>
-    <script src="/app.js?v=20260911-product-events" type="module"></script>
-    <script src="/analytics.js?v=20260911-product-events" defer></script>
+    <script src="/app.js?v=20261011-paid-allowances" type="module"></script>
+    <script src="/analytics.js?v=20261011-paid-allowances" defer></script>
   </body>
 </html>

@@ -78,6 +78,15 @@ const trackPageEvents = () => {
     });
     removeQueryParam("checkout");
   }
+
+  if (params.get("checkout") === "credits") {
+    window.trackVoiceCheckerEvent("credit_checkout_return", {
+      pack_checks: 20,
+      value: 4.99,
+      currency: "USD"
+    });
+    removeQueryParam("checkout");
+  }
 };
 
 document.addEventListener("click", (event) => {
@@ -86,6 +95,16 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("submit", (event) => {
+  const creditForm = event.target.closest?.('form[action="/api/credits/checkout"]');
+  if (creditForm) {
+    window.trackVoiceCheckerEvent("credit_checkout_start", {
+      pack_checks: 20,
+      value: 4.99,
+      currency: "USD"
+    });
+    return;
+  }
+
   const form = event.target.closest?.('form[action="/api/checkout"]');
   if (form) {
     window.trackVoiceCheckerEvent("checkout_start", {

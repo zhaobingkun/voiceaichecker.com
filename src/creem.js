@@ -45,20 +45,19 @@ const requestJson = ({ method, url, headers = {}, body = null }) =>
 export const isCreemConfigured = () =>
   Boolean(config.creemApiKey && config.creemApiBaseUrl && config.creemProProductId);
 
-export const createProCheckout = async ({ user }) => {
-  if (!isCreemConfigured()) {
-    throw new Error("Creem checkout is not configured.");
-  }
+export const isCreditsCheckoutConfigured = () =>
+  Boolean(config.creemApiKey && config.creemApiBaseUrl && config.creemCreditsProductId);
 
-  const successUrl = `${config.appBaseUrl}/pricing/?checkout=success`;
+const createCheckout = async ({ user, productId, successQuery, metadata }) => {
+  const successUrl = `${config.appBaseUrl}/pricing/?checkout=${successQuery}`;
   const body = JSON.stringify({
-    product_id: config.creemProProductId,
+    product_id: productId,
     success_url: successUrl,
     customer: user?.email ? { email: user.email } : undefined,
     metadata: {
       google_user_id: user?.id || "",
       email: user?.email || "",
-      plan: "pro_monthly"
+      ...metadata
     }
   });
 
@@ -90,6 +89,37 @@ export const createProCheckout = async ({ user }) => {
     checkoutId: response.payload?.id || "",
     mode: response.payload?.mode || ""
   };
+};
+
+export const createProCheckout = async ({ user }) => {
+  if (!isCreemConfigured()) {
+    throw new Error("Creem checkout is not configured.");
+  }
+
+  return createCheckout({
+    user,
+    productId: config.creemProProductId,
+    successQuery: "success",
+    metadata: {
+      plan: "pro_monthly"
+    }
+  });
+};
+
+export const createCreditsCheckout = async ({ user }) => {
+  if (!isCreditsCheckoutConfigured()) {
+    throw new Error("Credit pack checkout is not configured.");
+  }
+
+  return createCheckout({
+    user,
+    productId: config.creemCreditsProductId,
+    successQuery: "credits",
+    metadata: {
+      purchase_type: "credit_pack",
+      credit_amount: String(config.creditPackChecks)
+    }
+  });
 };
 
 const signaturesForHeader = (value) =>

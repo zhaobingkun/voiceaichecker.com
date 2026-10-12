@@ -64,7 +64,8 @@ test("anonymous detection is capped at the configured 15-second window", async (
   const payload = JSON.parse(res.body);
   assert.equal(payload.provider, "mock");
   assert.equal(payload.analyzedSeconds, 15);
-  assert.equal(payload.remainingDailyDetections, 2);
+  assert.equal(payload.remainingDailyDetections, 0);
+  assert.equal(payload.quotaSource, "daily_free");
 });
 
 test("account status exposes the anonymous analysis window", async () => {
@@ -75,9 +76,10 @@ test("account status exposes the anonymous analysis window", async () => {
 
   assert.equal(res.statusCode, 200);
   const payload = JSON.parse(res.body);
-  assert.equal(payload.dailyLimit, 3);
+  assert.equal(payload.dailyLimit, 1);
   assert.equal(payload.maxAnalyzeSeconds, 15);
-  assert.equal(payload.remainingDailyDetections, 3);
+  assert.equal(payload.remainingDailyDetections, 1);
+  assert.equal(payload.creditBalance, 0);
 });
 
 test("health reports the configured quota backend and timeout", () => {
@@ -89,4 +91,5 @@ test("health reports the configured quota backend and timeout", () => {
   const payload = JSON.parse(res.body);
   assert.equal(payload.quotaBackend, "memory");
   assert.equal(payload.modulateRequestTimeoutMs, 25000);
+  assert.equal(payload.proMonthlyLimit, 50);
 });

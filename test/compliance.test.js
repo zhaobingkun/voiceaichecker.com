@@ -140,13 +140,25 @@ test("detector and pricing pages explain guest and account audio limits", async 
   for (const page of detectorPages) {
     const html = await readFile(new URL(`../${page}`, import.meta.url), "utf8");
     assert.match(html, /Without sign-in: up to 15 seconds per check/i, `${page} must explain the guest limit`);
-    assert.match(html, /Free and Pro accounts: up to 30 seconds per check/i, `${page} must explain account limits`);
+    assert.match(html, /Signed-in accounts: up to 30 seconds per check/i, `${page} must explain account limits`);
   }
 
   const pricing = await readFile(new URL("../public/pricing/index.html", import.meta.url), "utf8");
   assert.match(pricing, /without login, up to 15 seconds each/i);
   assert.match(pricing, /Google login, up to 30 seconds each/i);
-  assert.match(pricing, /subscription is active, up to 30 seconds each/i);
+  assert.match(pricing, /20 detection credits added to the signed-in account/i);
+  assert.match(pricing, /Credits do not expire and there is no subscription/i);
+  assert.match(pricing, /Failed or server-error detections automatically return the reserved credit/i);
+});
+
+test("homepage prominently announces the current free limits and credit pack", async () => {
+  const homepage = await readFile(new URL("../public/index.html", import.meta.url), "utf8");
+
+  assert.match(homepage, /class="usage-announcement"/i);
+  assert.match(homepage, /1 for guests and 3 after sign-in/i);
+  assert.match(homepage, /Pro adds 50 checks each UTC month for \$9\.90/i);
+  assert.match(homepage, /20 non-expiring checks once for \$4\.99/i);
+  assert.match(homepage, /href="\/pricing\/#credit-pack"/i);
 });
 
 test("strengthened SEO landing pages keep enough unique visible content", async () => {

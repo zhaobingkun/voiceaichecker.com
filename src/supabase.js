@@ -108,6 +108,157 @@ export const getDetectionQuota = async ({ usageDate, identityKey, limit }) => {
   };
 };
 
+export const getProMonthlyQuota = async ({ periodStart, googleId, limit }) => {
+  if (!isSupabaseConfigured() || !googleId) {
+    return { usedCount: 0, remainingCount: 0 };
+  }
+
+  const result = await callRpc({
+    functionName: "get_pro_monthly_quota",
+    body: {
+      p_period_start: periodStart,
+      p_google_id: googleId,
+      p_limit: limit
+    }
+  });
+
+  return {
+    usedCount: Math.max(0, Number(result.used_count) || 0),
+    remainingCount: Math.max(0, Number(result.remaining_count) || 0)
+  };
+};
+
+export const consumeProMonthlyQuota = async ({ periodStart, googleId, limit, requestId }) => {
+  if (!isSupabaseConfigured() || !googleId) {
+    return { allowed: false, usedCount: 0, remainingCount: 0 };
+  }
+
+  const result = await callRpc({
+    functionName: "consume_pro_monthly_quota",
+    body: {
+      p_period_start: periodStart,
+      p_google_id: googleId,
+      p_limit: limit,
+      p_request_key: requestId
+    }
+  });
+
+  return {
+    allowed: result.allowed === true,
+    usedCount: Math.max(0, Number(result.used_count) || 0),
+    remainingCount: Math.max(0, Number(result.remaining_count) || 0)
+  };
+};
+
+export const refundProMonthlyQuota = async ({ periodStart, googleId, limit, requestId }) => {
+  if (!isSupabaseConfigured() || !googleId) {
+    return { refunded: false, usedCount: 0, remainingCount: 0 };
+  }
+
+  const result = await callRpc({
+    functionName: "refund_pro_monthly_quota",
+    body: {
+      p_period_start: periodStart,
+      p_google_id: googleId,
+      p_limit: limit,
+      p_usage_request_key: requestId
+    }
+  });
+
+  return {
+    refunded: result.refunded === true,
+    usedCount: Math.max(0, Number(result.used_count) || 0),
+    remainingCount: Math.max(0, Number(result.remaining_count) || 0)
+  };
+};
+
+export const getUserCreditBalance = async (user) => {
+  if (!isSupabaseConfigured() || !user?.id) return 0;
+
+  const params = new URLSearchParams({
+    select: "balance",
+    google_id: `eq.${user.id}`,
+    limit: "1"
+  });
+  const response = await requestJson({
+    method: "GET",
+    url: `${config.supabaseUrl}/rest/v1/credit_balances?${params}`,
+    headers: {
+      apikey: config.supabaseServiceRoleKey,
+      Authorization: `Bearer ${config.supabaseServiceRoleKey}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      response.payload?.message ||
+        response.payload?.error ||
+        `Supabase credit balance lookup failed with HTTP ${response.status}`
+    );
+  }
+
+  const row = Array.isArray(response.payload) ? response.payload[0] : null;
+  return Math.max(0, Number(row?.balance) || 0);
+};
+
+export const consumeDetectionCredit = async ({ googleId, requestId }) => {
+  if (!isSupabaseConfigured() || !googleId) return { allowed: false, balance: 0 };
+
+  const result = await callRpc({
+    functionName: "consume_detection_credit",
+    body: {
+      p_google_id: googleId,
+      p_request_key: requestId
+    }
+  });
+
+  return {
+    allowed: result.allowed === true,
+    balance: Math.max(0, Number(result.balance) || 0)
+  };
+};
+
+export const refundDetectionCredit = async ({ googleId, requestId }) => {
+  if (!isSupabaseConfigured() || !googleId) return { refunded: false, balance: 0 };
+
+  const result = await callRpc({
+    functionName: "refund_detection_credit",
+    body: {
+      p_google_id: googleId,
+      p_usage_request_key: requestId
+    }
+  });
+
+  return {
+    refunded: result.refunded === true,
+    balance: Math.max(0, Number(result.balance) || 0)
+  };
+};
+
+export const grantDetectionCredits = async ({ googleId, email, amount, requestId, orderId, checkoutId, productId }) => {
+  if (!isSupabaseConfigured()) return { ok: false, skipped: true, reason: "storage_not_configured" };
+  if (!googleId) return { ok: false, skipped: true, reason: "missing_user_identity" };
+
+  const result = await callRpc({
+    functionName: "grant_detection_credits",
+    body: {
+      p_google_id: googleId,
+      p_email: email || null,
+      p_amount: amount,
+      p_request_key: requestId,
+      p_order_id: orderId || null,
+      p_checkout_id: checkoutId || null,
+      p_product_id: productId || null
+    }
+  });
+
+  return {
+    ok: true,
+    granted: result.granted === true,
+    balance: Math.max(0, Number(result.balance) || 0)
+  };
+};
+
 export const recordDetectionEvent = async ({
   requestId,
   identityHash,
@@ -121,7 +272,8 @@ export const recordDetectionEvent = async ({
   durationMs = null,
   errorCode = null,
   inputSource = null,
-  pagePath = null
+  pagePath = null,
+  quotaSource = null
 }) => {
   if (!isSupabaseConfigured()) return { ok: false, skipped: true };
 
@@ -138,7 +290,8 @@ export const recordDetectionEvent = async ({
     duration_ms: durationMs,
     error_code: errorCode,
     input_source: inputSource,
-    page_path: pagePath
+    page_path: pagePath,
+    quota_source: quotaSource
   });
 
   const response = await requestJson({

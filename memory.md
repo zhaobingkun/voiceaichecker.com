@@ -1,5 +1,25 @@
 # 项目经验记录
 
+## 2026-10-12
+
+- 已在生产 Supabase 项目 `ai-voice-detector`（project ref `mvzoanuylnsqrqwuaaro`）依次执行 `supabase-schema.sql`、`supabase-credits.sql`、`supabase-pro-monthly.sql`，三个迁移均显示 `Success. No rows returned.`。
+- 执行后在 Supabase Table Editor 确认 `credit_balances`、`credit_transactions`、`pro_monthly_usage`、`pro_monthly_transactions` 已出现；原有 `users`、`daily_detection_usage`、`detection_events` 仍在。迁移脚本还创建或更新每日免费、永久积分和 Pro 月额度相关 RPC，应用发布时可按每日免费 → Pro 月额度 → 永久积分的顺序调用。
+- 本地目录已通过 Vercel CLI 关联到 `zhaobingkuns-projects-b2b82dc8/voiceaichecker-com`；Vercel Production 和 Preview 已配置 `DAILY_IP_LIMIT=1`、`AUTH_DAILY_LIMIT=3`、`PRO_MONTHLY_LIMIT=50`，环境变量列表确认三项均存在。旧 `PRO_DAILY_LIMIT` 保留但新代码不再读取。
+- Creem 正式商店已创建 Active 一次性商品 `VoiceAIChecker 20 Detection Credits`，价格为 $4.99（税费另计），Product ID 为 `prod_1X59fhDYAjbycUhuhRQUi7`；该 ID 已作为 `CREEM_CREDITS_PRODUCT_ID` 写入 Vercel Production 和 Preview。
+- 数据库、Creem 商品和 Vercel 环境变量均已完成；新付费规则仍需提交、推送、部署并做生产冒烟验证后才能宣布整体上线。
+
+## 2026-10-11
+
+- 付费规则调整为：匿名用户每天 1 次、登录免费用户每天 3 次；单次时长仍为匿名最多 15 秒、登录账户最多 30 秒。Pro 为 $9.90/月，每个 UTC 自然月额外 50 次成功检测，月末清零且不结转；额度使用顺序固定为每日免费、Pro 月额度、永久积分。
+- 新增一次性积分包方案：20 次检测 / $4.99、不过期、无自动续费；免费日额度优先，免费额度用完后才预扣积分。音频校验发生在积分预扣前，供应商或请求失败会通过幂等 RPC 自动退回积分；成功检测（包括缓存命中）消耗 1 积分。
+- 新增 `supabase-credits.sql`，包含私有积分余额、幂等交易流水、购买发放、检测扣减和失败返还 RPC；`detection_events` 新增 `quota_source` 以区分 daily_free 与 credit。数据库迁移必须先于应用发布执行。
+- 新增 `supabase-pro-monthly.sql`，用独立月度账本和交易表实现 Pro 每月 50 次，并按 request ID 保证扣减和失败返还幂等；`quota_source` 同步增加 `pro_monthly`。Pro 失败或服务器错误自动返还当月额度。
+- 新增 `/api/credits/checkout` 和 Creem 一次性商品 checkout；webhook 只在签名正确、事件已支付且 product ID 与 `CREEM_CREDITS_PRODUCT_ID` 完全一致时发放固定 20 次，不信任 webhook metadata 中的自报数量。重复 order/checkout 不会重复发放。
+- 首页导航下方新增显眼的 Usage update 公告，明确 1/3 次免费规则、$4.99/20 次积分包、不过期与失败不扣积分，并链接到价格页；手机和桌面布局均已本地视觉检查。
+- 价格、条款、隐私和退款页面已同步展示免费、Pro 月额度和一次性积分；GA4 增加 `credit_offer_view`、`credit_offer_click`、`credit_checkout_start`、`credit_checkout_return`，可用于判断展示、点击和结账意愿；真实购买以服务端 credit transaction 为准，不把返回页面冒充为已确认购买。
+- 本地完整测试 37/37 通过，JavaScript 语法检查与 `git diff --check` 通过；桌面和 390px 手机端已检查首页公告与价格页，未发现横向溢出或控制台错误。
+- 当前尚未创建 Creem 一次性商品、配置 `CREEM_CREDITS_PRODUCT_ID`、修改 Vercel 的 `DAILY_IP_LIMIT`/`AUTH_DAILY_LIMIT`/`PRO_MONTHLY_LIMIT` 或部署；生产数据库迁移已于 2026-10-12 完成，但其余外部步骤完成前不可宣布新规则、Pro 月额度或积分购买已上线。
+
 ## 2026-09-17
 
 - 网站此前实际执行“匿名用户最多分析 15 秒、登录免费用户和 Pro 用户最多分析 30 秒”，但公开页面普遍只写 `30 sec max`，没有解释账户分级，容易让匿名用户误以为程序错误或上传被意外截断。

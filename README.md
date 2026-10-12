@@ -26,11 +26,14 @@ MODULATE_API_URL=https://modulate-developer-apis.com/api/velma-2-synthetic-voice
 SESSION_SECRET=generate_a_long_random_secret
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-PRO_DAILY_LIMIT=20
+PRO_MONTHLY_LIMIT=50
 CREEM_API_KEY=your_creem_api_key
 CREEM_API_BASE_URL=https://api.creem.io
 CREEM_WEBHOOK_SECRET=your_creem_webhook_secret
 CREEM_PRO_PRODUCT_ID=prod_12r7OKEp2EKXmH8Hsyz5oN
+CREEM_CREDITS_PRODUCT_ID=your_one_time_credit_pack_product_id
+CREDIT_PACK_CHECKS=20
+CREDIT_PACK_PRICE_USD=4.99
 ```
 
 Do not put `MODULATE_API_KEY` in `public/app.js` or any frontend file.
@@ -38,7 +41,13 @@ Do not put `SUPABASE_SERVICE_ROLE_KEY` in frontend files either.
 
 ## Supabase users table
 
-Run `supabase-schema.sql` in the Supabase SQL Editor before testing Google login persistence or Pro subscription access. Google login works without Supabase, but users and subscription status will only persist after the tables exist.
+Run these SQL files in the Supabase SQL Editor, in order, before testing paid access:
+
+1. `supabase-schema.sql`
+2. `supabase-credits.sql`
+3. `supabase-pro-monthly.sql`
+
+The first file creates account, subscription, daily quota, and analytics storage. The next two add permanent credit packs and the Pro monthly allowance. Google login works without Supabase, but users, paid access, and persistent quotas require these tables and RPC functions.
 
 ## Optional Google login
 
@@ -57,8 +66,8 @@ APP_BASE_URL=http://localhost:8787
 GOOGLE_CLIENT_ID=your_google_oauth_client_id
 GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
 SESSION_SECRET=generate_a_long_random_secret
-AUTH_DAILY_LIMIT=10
-PRO_DAILY_LIMIT=20
+AUTH_DAILY_LIMIT=3
+PRO_MONTHLY_LIMIT=50
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
@@ -75,9 +84,9 @@ Defaults are in `.env.example`:
 
 - `MAX_FILE_MB=10`
 - `MAX_ANALYZE_SECONDS=30`
-- `DAILY_IP_LIMIT=3`
-- `AUTH_DAILY_LIMIT=10`
-- `PRO_DAILY_LIMIT=20`
+- `DAILY_IP_LIMIT=1`
+- `AUTH_DAILY_LIMIT=3`
+- `PRO_MONTHLY_LIMIT=50`
 
 The backend also keeps an in-memory hash cache, so repeated uploads of the same file and analyze window do not call the provider again.
 
@@ -100,15 +109,18 @@ GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
 SESSION_SECRET=generate_a_long_random_secret
 MAX_FILE_MB=3
 MAX_ANALYZE_SECONDS=30
-DAILY_IP_LIMIT=3
-AUTH_DAILY_LIMIT=10
+DAILY_IP_LIMIT=1
+AUTH_DAILY_LIMIT=3
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-PRO_DAILY_LIMIT=20
+PRO_MONTHLY_LIMIT=50
 CREEM_API_KEY=your_creem_api_key
 CREEM_API_BASE_URL=https://api.creem.io
 CREEM_WEBHOOK_SECRET=your_creem_webhook_secret
 CREEM_PRO_PRODUCT_ID=prod_12r7OKEp2EKXmH8Hsyz5oN
+CREEM_CREDITS_PRODUCT_ID=your_one_time_credit_pack_product_id
+CREDIT_PACK_CHECKS=20
+CREDIT_PACK_PRICE_USD=4.99
 ```
 
 In Google Cloud, add the production redirect URI:
@@ -133,7 +145,7 @@ https://voiceaichecker.com/webhook
 
 - `server.js`: static file server and `/api/detect`
 - `src/auth.js`: Google OAuth login and in-memory sessions
-- `src/supabase.js`: Supabase REST user and subscription upserts
+- `src/supabase.js`: Supabase REST users, subscriptions, daily quotas, Pro monthly checks, and permanent credits
 - `src/audio.js`: WAV validation and server-side trimming
 - `src/provider.js`: mock detector and provider adapter
 - `src/config.js`: limits and environment configuration

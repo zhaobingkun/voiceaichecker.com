@@ -9,14 +9,27 @@ import {
 } from "../auth.js";
 import { trimWavBuffer } from "../audio.js";
 import { config, limits } from "../config.js";
-import { createProCheckout, isCreemConfigured, verifyCreemWebhookSignature } from "../creem.js";
+import {
+  createCreditsCheckout,
+  createProCheckout,
+  isCreemConfigured,
+  isCreditsCheckoutConfigured,
+  verifyCreemWebhookSignature
+} from "../creem.js";
 import { classifyScore, confidenceForScore, detectVoice } from "../provider.js";
 import {
   consumeDetectionQuota,
+  consumeDetectionCredit,
+  consumeProMonthlyQuota,
+  getUserCreditBalance,
   getDetectionQuota,
+  getProMonthlyQuota,
   getUserSubscription,
+  grantDetectionCredits,
   isSupabaseConfigured,
   recordDetectionEvent,
+  refundDetectionCredit,
+  refundProMonthlyQuota,
   upsertSubscription
 } from "../supabase.js";
 
@@ -28,6 +41,7 @@ globalThis.__avdUsage = usage;
 const allowedAudioTypes = new Set(["audio/wav", "audio/x-wav", "application/octet-stream"]);
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
+const monthStartKey = () => `${new Date().toISOString().slice(0, 7)}-01`;
 
 const getIp = (req) => {
   const forwarded = req.headers["x-forwarded-for"];
@@ -78,8 +92,8 @@ const usageKeyForRequest = async (req) => {
       subscription,
       isPro,
       analyticsIdentity: `user:${user.id}`,
-      key: `${todayKey()}:user:${user.id}:${isPro ? "pro" : "free"}`,
-      limit: isPro ? config.proDailyLimit : config.authenticatedDailyLimit
+      key: `${todayKey()}:user:${user.id}:free`,
+      limit: config.authenticatedDailyLimit
     };
   }
 
@@ -208,6 +222,12 @@ export const handleDetect = async (req, res) => {
   const startedAt = Date.now();
   const quota = await usageKeyForRequest(req);
   let quotaState;
+  let creditReserved = false;
+  let proMonthlyReserved = false;
+  let creditBalance;
+  let remainingProMonthlyDetections;
+  let quotaSource = "daily_free";
+  const proPeriodStart = monthStartKey();
 
   try {
     quotaState = await reserveQuota(quota);
@@ -220,18 +240,17 @@ export const handleDetect = async (req, res) => {
     return;
   }
 
-  if (!quotaState.allowed) {
+  if (!quotaState.allowed && !quota.user) {
     await writeDetectionEvent({
       quota,
       requestId,
       startedAt,
       status: "quota_rejected",
-      errorCode: "daily_limit"
+      errorCode: "daily_limit",
+      quotaSource: "daily_free"
     });
     sendJson(res, 429, {
-      error: quota.user
-        ? "Daily account limit reached. Try again tomorrow."
-        : "Daily free limit reached. Sign in with Google for more free detections."
+      error: "Daily free limit reached. Sign in with Google for 3 free daily detections and optional credit packs."
     });
     return;
   }
@@ -270,6 +289,68 @@ export const handleDetect = async (req, res) => {
       throw new Error(`Trimmed audio is too large. Max sample size is ${config.maxFileMb}MB.`);
     }
 
+    if (!quotaState.allowed && quota.isPro) {
+      quotaSource = "pro_monthly";
+      let proMonthlyState;
+      try {
+        proMonthlyState = await consumeProMonthlyQuota({
+          periodStart: proPeriodStart,
+          googleId: quota.user.id,
+          limit: config.proMonthlyLimit,
+          requestId
+        });
+      } catch (error) {
+        console.error("Pro monthly quota service failed", { requestId, message: error.message });
+        sendJson(res, 503, { error: "Pro monthly allowance is temporarily unavailable. Please try again shortly." });
+        return;
+      }
+
+      remainingProMonthlyDetections = proMonthlyState.remainingCount;
+      proMonthlyReserved = proMonthlyState.allowed;
+    }
+
+    if (!quotaState.allowed && !proMonthlyReserved) {
+      quotaSource = "credit";
+      let creditState;
+      try {
+        creditState = await consumeDetectionCredit({
+          googleId: quota.user.id,
+          requestId
+        });
+      } catch (error) {
+        console.error("Detection credit service failed", { requestId, message: error.message });
+        sendJson(res, 503, { error: "Credit balance is temporarily unavailable. Please try again shortly." });
+        return;
+      }
+
+      if (!creditState.allowed) {
+        await writeDetectionEvent({
+          quota,
+          requestId,
+          startedAt,
+          ...analyticsDetails,
+          status: "quota_rejected",
+          errorCode: quota.isPro ? "all_allowances_exhausted" : "daily_limit_and_no_credits",
+          quotaSource
+        });
+        sendJson(res, 429, {
+          error: quota.isPro
+            ? "Your daily free checks and 50 Pro checks for this month are used. Buy 20 extra checks for $4.99 or wait for the next reset."
+            : "Your 3 free checks for today are used. Buy 20 extra checks for $4.99 or try again tomorrow.",
+          creditBalance: creditState.balance,
+          remainingProMonthlyDetections: quota.isPro ? 0 : undefined,
+          canBuyCredits: isCreditsCheckoutConfigured(),
+          pricingUrl: "/pricing/#credit-pack"
+        });
+        return;
+      }
+
+      creditReserved = true;
+      creditBalance = creditState.balance;
+    }
+
+    analyticsDetails.quotaSource = quotaSource;
+
     const fileHash = createHash("sha256").update(trimmedAudio.buffer).digest("hex");
     const cacheKey = `${fileHash}:${analyzeSeconds}`;
     const cached = getCachedDetection(cacheKey);
@@ -291,7 +372,10 @@ export const handleDetect = async (req, res) => {
         user: quota.user,
         subscription: quota.subscription,
         isPro: quota.isPro,
-        remainingDailyDetections: remainingForQuota({ usedCount: quotaState.usedCount, limit: quota.limit })
+        remainingDailyDetections: remainingForQuota({ usedCount: quotaState.usedCount, limit: quota.limit }),
+        remainingProMonthlyDetections,
+        creditBalance,
+        quotaSource
       });
       return;
     }
@@ -339,16 +423,49 @@ export const handleDetect = async (req, res) => {
       user: quota.user,
       subscription: quota.subscription,
       isPro: quota.isPro,
-      remainingDailyDetections: remainingForQuota({ usedCount: quotaState.usedCount, limit: quota.limit })
+      remainingDailyDetections: remainingForQuota({ usedCount: quotaState.usedCount, limit: quota.limit }),
+      remainingProMonthlyDetections,
+      creditBalance,
+      quotaSource
     });
   } catch (error) {
+    if (proMonthlyReserved) {
+      try {
+        const refund = await refundProMonthlyQuota({
+          periodStart: proPeriodStart,
+          googleId: quota.user.id,
+          limit: config.proMonthlyLimit,
+          requestId
+        });
+        remainingProMonthlyDetections = refund.remainingCount;
+      } catch (refundError) {
+        console.error("Pro monthly quota refund failed", {
+          requestId,
+          googleId: quota.user.id,
+          message: refundError.message
+        });
+      }
+    }
+    if (creditReserved) {
+      try {
+        const refund = await refundDetectionCredit({ googleId: quota.user.id, requestId });
+        creditBalance = refund.balance;
+      } catch (refundError) {
+        console.error("Detection credit refund failed", {
+          requestId,
+          googleId: quota.user.id,
+          message: refundError.message
+        });
+      }
+    }
     await writeDetectionEvent({
       quota,
       requestId,
       startedAt,
       ...analyticsDetails,
       status: "failed",
-      errorCode: detectionErrorCode(error)
+      errorCode: detectionErrorCode(error),
+      quotaSource
     });
     throw error;
   }
@@ -437,7 +554,7 @@ const subscriptionUpdateFromCreemEvent = (event) => {
   const subscription = data.subscription || data.subscription_details || data.recurring || {};
   const customer = data.customer || data.customer_details || {};
   const metadata = findMetadata(event);
-  const eventType = String(event?.type || event?.event_type || event?.event || "");
+  const eventType = String(event?.eventType || event?.type || event?.event_type || event?.event || "");
   const status = normalizeCreemStatus({
     type: eventType,
     status: firstValue(data.status, subscription.status, data.payment_status, data.subscription_status)
@@ -461,6 +578,44 @@ const subscriptionUpdateFromCreemEvent = (event) => {
   };
 };
 
+export const creditPurchaseFromCreemEvent = (event) => {
+  const data = event?.object || event?.data?.object || event?.data || event || {};
+  const order = data.order || data.order_details || {};
+  const customer = data.customer || data.customer_details || order.customer || {};
+  const metadata = findMetadata(event);
+  const eventType = String(event?.eventType || event?.type || event?.event_type || event?.event || "").toLowerCase();
+  const productId = objectId(
+    firstValue(data.product_id, data.product, order.product_id, order.product, data.product_details)
+  );
+  const orderId = objectId(firstValue(data.order_id, data.order, order.id));
+  const checkoutId = objectId(firstValue(data.checkout_id, data.checkout, order.checkout_id));
+  const eventId = objectId(firstValue(event?.id, data.id));
+  const status = String(firstValue(data.status, order.status, data.payment_status)).toLowerCase();
+  const marksCreditPack =
+    metadata.purchase_type === "credit_pack" ||
+    metadata.plan === "credit_pack" ||
+    (config.creemCreditsProductId && productId === config.creemCreditsProductId);
+  const isPaidCompletion =
+    /(checkout\.completed|payment\.succeeded|order\.paid)/.test(eventType) || /^(paid|completed|succeeded)$/.test(status);
+
+  if (!marksCreditPack || !isPaidCompletion) return null;
+  if (!config.creemCreditsProductId || productId !== config.creemCreditsProductId) return null;
+
+  const purchaseKey = orderId || checkoutId || eventId;
+  if (!purchaseKey) return null;
+
+  return {
+    googleId: firstValue(metadata.google_user_id, metadata.googleUserId, metadata.user_id, metadata.userId),
+    email: firstValue(metadata.email, data.customer_email, data.email, customer.email),
+    amount: config.creditPackChecks,
+    requestId: `credit_purchase:${purchaseKey}`,
+    orderId,
+    checkoutId,
+    productId,
+    rawEventType: eventType
+  };
+};
+
 export const handleCheckout = async (req, res) => {
   const user = getCurrentUser(req);
   if (!user) {
@@ -469,6 +624,17 @@ export const handleCheckout = async (req, res) => {
   }
 
   const checkout = await createProCheckout({ user });
+  redirect(res, checkout.checkoutUrl);
+};
+
+export const handleCreditsCheckout = async (req, res) => {
+  const user = getCurrentUser(req);
+  if (!user) {
+    redirect(res, "/auth/google?next=/pricing/#credit-pack");
+    return;
+  }
+
+  const checkout = await createCreditsCheckout({ user });
   redirect(res, checkout.checkoutUrl);
 };
 
@@ -487,6 +653,38 @@ export const handleCreemWebhook = async (req, res) => {
     return;
   }
 
+  const creditPurchase = creditPurchaseFromCreemEvent(event);
+  if (creditPurchase) {
+    const grantResult = await grantDetectionCredits(creditPurchase);
+    if (!grantResult.ok) {
+      sendJson(res, 503, {
+        error: "Credit purchase was not persisted",
+        reason: grantResult.reason || (grantResult.skipped ? "storage_not_configured" : "unknown")
+      });
+      return;
+    }
+
+    console.log("Creem credit purchase received", {
+      type: creditPurchase.rawEventType || "unknown",
+      orderId: creditPurchase.orderId || "unknown",
+      granted: grantResult.granted,
+      balance: grantResult.balance
+    });
+    sendJson(res, 200, { ok: true });
+    return;
+  }
+
+  const eventMetadata = findMetadata(event);
+  if (eventMetadata.purchase_type === "credit_pack" || eventMetadata.plan === "credit_pack") {
+    const eventType = String(event?.eventType || event?.type || event?.event_type || event?.event || "").toLowerCase();
+    if (/(checkout\.completed|payment\.succeeded|order\.paid)/.test(eventType)) {
+      sendJson(res, 503, { error: "Credit purchase product could not be verified" });
+      return;
+    }
+    sendJson(res, 200, { ok: true, ignored: true });
+    return;
+  }
+
   const subscriptionUpdate = subscriptionUpdateFromCreemEvent(event);
   const upsertResult = await upsertSubscription(subscriptionUpdate);
 
@@ -499,7 +697,7 @@ export const handleCreemWebhook = async (req, res) => {
   }
 
   console.log("Creem webhook received", {
-    type: event.type || event.event_type || event.event || "unknown",
+    type: event.eventType || event.type || event.event_type || event.event || "unknown",
     id: event.id || event.object?.id || event.data?.id || "unknown",
     subscriptionUpdated: true
   });
@@ -509,10 +707,23 @@ export const handleCreemWebhook = async (req, res) => {
 
 export const handleMe = async (req, res) => {
   const quota = await usageKeyForRequest(req);
+  const proPeriodStart = monthStartKey();
   let quotaState;
+  let creditBalance = 0;
+  let proMonthlyState = { usedCount: 0, remainingCount: 0 };
 
   try {
-    quotaState = await readQuota(quota);
+    [quotaState, creditBalance, proMonthlyState] = await Promise.all([
+      readQuota(quota),
+      quota.user ? getUserCreditBalance(quota.user) : Promise.resolve(0),
+      quota.isPro
+        ? getProMonthlyQuota({
+            periodStart: proPeriodStart,
+            googleId: quota.user.id,
+            limit: config.proMonthlyLimit
+          })
+        : Promise.resolve({ usedCount: 0, remainingCount: 0 })
+    ]);
   } catch (error) {
     console.error("Detection quota lookup failed", {
       message: error.message,
@@ -527,6 +738,13 @@ export const handleMe = async (req, res) => {
     user: quota.user,
     subscription: quota.subscription,
     isPro: quota.isPro,
+    proMonthlyLimit: config.proMonthlyLimit,
+    remainingProMonthlyDetections: proMonthlyState.remainingCount,
+    proMonthlyPeriodStart: quota.isPro ? proPeriodStart : null,
+    creditBalance,
+    creditPackChecks: config.creditPackChecks,
+    creditPackPriceUsd: config.creditPackPriceUsd,
+    creditsCheckoutConfigured: isCreditsCheckoutConfigured(),
     dailyLimit: quota.limit,
     maxAnalyzeSeconds: quota.user ? config.maxAnalyzeSeconds : Math.min(config.maxAnalyzeSeconds, config.anonymousMaxAnalyzeSeconds),
     remainingDailyDetections: quotaState.remainingCount
@@ -541,13 +759,16 @@ export const handleHealth = (res) => {
     supabaseConfigured: isSupabaseConfigured(),
     quotaBackend: isSupabaseConfigured() ? "supabase" : "memory",
     creemConfigured: isCreemConfigured(),
+    creditsCheckoutConfigured: isCreditsCheckoutConfigured(),
+    creditPackChecks: config.creditPackChecks,
+    creditPackPriceUsd: config.creditPackPriceUsd,
     maxFileMb: config.maxFileMb,
     maxAnalyzeSeconds: config.maxAnalyzeSeconds,
     anonymousMaxAnalyzeSeconds: config.anonymousMaxAnalyzeSeconds,
     modulateRequestTimeoutMs: config.modulateRequestTimeoutMs,
     dailyIpLimit: config.dailyIpLimit,
     authenticatedDailyLimit: config.authenticatedDailyLimit,
-    proDailyLimit: config.proDailyLimit
+    proMonthlyLimit: config.proMonthlyLimit
   });
 };
 

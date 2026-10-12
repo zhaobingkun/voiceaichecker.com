@@ -109,6 +109,14 @@
           </div>
         </div>
       </header>
+      <aside class="usage-announcement" aria-labelledby="usage-update-title">
+        <div>
+          <p class="announcement-label">Usage update</p>
+          <h2 id="usage-update-title">Free daily checks are now 1 for guests and 3 after sign-in.</h2>
+          <p>Need more? Pro adds 50 checks each UTC month for $9.90, or buy 20 non-expiring checks once for $4.99. Failed detections do not use paid allowances.</p>
+        </div>
+        <a class="announcement-action" href="/pricing/#credit-pack">See pricing</a>
+      </aside>
       <nav class="breadcrumb" aria-label="Breadcrumb">
         <span>Home</span>
       </nav>
@@ -134,7 +142,7 @@
         <div class="detector-panel" id="detector">
           <div class="panel-heading">
             <span>Analyze sample</span>
-            <strong>3 free checks daily</strong>
+            <strong>1 guest / 3 account checks daily</strong>
           </div>
           <div class="detector-steps" aria-label="Detection workflow">
             <span><b>1</b> Add audio</span>
@@ -182,7 +190,7 @@
               <output id="seconds-output" for="seconds-input">30s</output>
             </div>
           </div>
-          <p class="analysis-limit-note">Without sign-in: up to 15 seconds per check. Free and Pro accounts: up to 30 seconds per check.</p>
+          <p class="analysis-limit-note">Without sign-in: up to 15 seconds per check. Signed-in accounts: up to 30 seconds per check.</p>
 
           <button class="primary-button" id="detect-button" type="button" disabled>Detect voice</button>
           <p class="status" id="status" role="status">Choose or record audio to start.</p>
@@ -399,21 +407,21 @@
       </section>
 
       <section class="content-section" aria-labelledby="free-first-pricing">
-        <h2 id="free-first-pricing">Free Checks and Pro Plan</h2>
+        <h2 id="free-first-pricing">Free Checks, Pro, and Optional Credits</h2>
         <p class="answer">
-          AI Voice Detector is free-first. Basic checks remain available without checkout: 3 checks per day without
-          login, or 10 free checks per day with optional Google login. Pro is $9.90 per month and includes up to 20
-          checks per day for signed-in users. If you only need to check the occasional voice note, the free limit is meant
-          to be enough; Pro is for repeated review work.
+          AI Voice Detector is free-first. Basic checks remain available without checkout: 1 check per day without
+          login, or 3 free checks per day with optional Google login. If you need more, a one-time $4.99 purchase adds
+          20 checks to your account, or Pro adds 50 checks each UTC month for $9.90. The usage order is daily free
+          checks, then Pro monthly checks, then permanent credits.
         </p>
         <div class="related-grid">
           <a class="related-card" href="/pricing/">
             <strong>Pricing</strong>
-            <span>See the free plan, $9.90/month Pro subscription, 20-check daily Pro limit, and payment details.</span>
+            <span>Compare daily free checks, Pro with 50 monthly checks, and the $4.99 pack of 20 permanent checks.</span>
           </a>
           <a class="related-card" href="/refund-policy/">
             <strong>Refund Policy</strong>
-            <span>Review refund and cancellation terms for the Pro subscription before checkout.</span>
+            <span>Review refund terms for Pro subscriptions and one-time credit purchases before checkout.</span>
           </a>
         </div>
       </section>
@@ -495,7 +503,7 @@
       <section class="content-section" aria-labelledby="customer-support">
         <h2 id="customer-support">Customer Support</h2>
         <p class="answer">
-          For account, billing, subscription, refund, privacy, or detection questions, email
+          For account, billing, credit-pack, refund, privacy, or detection questions, email
           <span class="support-email"><span>bingkun.zhao</span><span>&#64;</span><span>gmail.com</span></span>. We aim
           to respond within three business days.
         </p>
@@ -514,7 +522,7 @@
         </div></footer>
     </main>
 
-    <script src="/app.js?v=20260911-product-events" type="module"></script>
-    <script src="/analytics.js?v=20260911-product-events" defer></script>
+    <script src="/app.js?v=20261011-paid-allowances" type="module"></script>
+    <script src="/analytics.js?v=20261011-paid-allowances" defer></script>
 </body>
 </html>

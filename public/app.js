@@ -43,6 +43,8 @@ let recordStartedAt = 0;
 let recordTimer = null;
 let accountState = null;
 let selectedInputSource = "upload";
+let creditAction = null;
+let creditOfferTracked = false;
 
 const trackEvent = (name, params = {}) => {
   if (typeof window.trackVoiceCheckerEvent === "function") {
@@ -113,7 +115,40 @@ const renderAccount = (state) => {
   accountState = state;
   const remaining = state?.remainingDailyDetections ?? "--";
   const limit = state?.dailyLimit ?? "--";
-  quotaChip.textContent = state?.isPro ? `${remaining}/${limit} Pro checks left` : `${remaining}/${limit} free checks left`;
+  const credits = Number(state?.creditBalance) || 0;
+  const proRemaining = Number(state?.remainingProMonthlyDetections) || 0;
+  const proLimit = Number(state?.proMonthlyLimit) || 50;
+  const quotaText = state?.isPro
+    ? `${remaining}/${limit} free today · ${proRemaining}/${proLimit} Pro this month · ${credits} credits`
+    : state?.user
+      ? `${remaining}/${limit} free today · ${credits} credits`
+      : `${remaining}/${limit} free check left`;
+
+  if (!creditAction) {
+    creditAction = document.createElement("a");
+    creditAction.className = "credit-action";
+    creditAction.href = "/pricing/#credit-pack";
+    creditAction.textContent = "Get 20 extra checks";
+    creditAction.addEventListener("click", () => {
+      trackEvent("credit_offer_click", {
+        remaining_free: Number(accountState?.remainingDailyDetections) || 0,
+        credit_balance: Number(accountState?.creditBalance) || 0
+      });
+    });
+  }
+  quotaChip.replaceChildren(document.createTextNode(quotaText), creditAction);
+  const showCreditOffer =
+    Boolean(state?.user) &&
+    Number(remaining) <= 1 &&
+    (!state?.isPro || proRemaining <= 1);
+  creditAction.hidden = !showCreditOffer;
+  if (showCreditOffer && !creditOfferTracked) {
+    creditOfferTracked = true;
+    trackEvent("credit_offer_view", {
+      remaining_free: Number(remaining) || 0,
+      credit_balance: credits
+    });
+  }
 
   const maxAnalyzeSeconds = Number(state?.maxAnalyzeSeconds);
   if (secondsInput && Number.isFinite(maxAnalyzeSeconds) && maxAnalyzeSeconds > 0) {
@@ -312,6 +347,9 @@ const labelText = {
 const showResult = (result) => {
   const aiPercent = Math.round(result.aiProbability * 100);
   const humanPercent = Math.round(result.humanProbability * 100);
+  const dailyRemaining = result.remainingDailyDetections ?? accountState?.remainingDailyDetections ?? 0;
+  const proRemaining = result.remainingProMonthlyDetections ?? accountState?.remainingProMonthlyDetections ?? 0;
+  const credits = result.creditBalance ?? accountState?.creditBalance ?? 0;
 
   resultLabel.textContent = labelText[result.label] || "Unclear";
   scoreFill.style.width = `${aiPercent}%`;
@@ -320,7 +358,11 @@ const showResult = (result) => {
   confidenceValue.textContent = result.confidence || "--";
   providerValue.textContent = result.provider || "--";
   analyzedValue.textContent = `${result.analyzedSeconds || "--"}s`;
-  remainingValue.textContent = String(result.remainingDailyDetections ?? "--");
+  remainingValue.textContent = result.isPro
+    ? `${dailyRemaining} free + ${proRemaining} Pro + ${credits} credits`
+    : result.user
+      ? `${dailyRemaining} free + ${credits} credits`
+      : String(result.remainingDailyDetections ?? "--");
   resultNote.textContent = result.notes || "";
   resultSection.hidden = false;
   resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -373,6 +415,13 @@ const detectSelectedFile = async () => {
     if (!response.ok) {
       const responseError = new Error(payload.error || "Detection failed.");
       responseError.statusCode = response.status;
+      if (accountState && Number.isFinite(Number(payload.creditBalance))) {
+        accountState.creditBalance = Number(payload.creditBalance);
+      }
+      if (accountState && Number.isFinite(Number(payload.remainingProMonthlyDetections))) {
+        accountState.remainingProMonthlyDetections = Number(payload.remainingProMonthlyDetections);
+      }
+      if (accountState) renderAccount(accountState);
       throw responseError;
     }
 
@@ -389,6 +438,12 @@ const detectSelectedFile = async () => {
     });
     if (accountState) {
       accountState.remainingDailyDetections = payload.remainingDailyDetections;
+      if (Number.isFinite(Number(payload.remainingProMonthlyDetections))) {
+        accountState.remainingProMonthlyDetections = Number(payload.remainingProMonthlyDetections);
+      }
+      if (Number.isFinite(Number(payload.creditBalance))) {
+        accountState.creditBalance = Number(payload.creditBalance);
+      }
       renderAccount(accountState);
     } else {
       await loadAccount();
